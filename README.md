@@ -1,4 +1,4 @@
-🎮 Game Boy Emulator (C)
+🎮 Game Boy Compyla (C)
 This project is an ongoing endeavor to build a functional Nintendo Game Boy emulator from scratch using the C programming language. It serves as a deep dive into low-level system programming, exploring classic computer architecture, and understanding how retro consoles operate at a fundamental level.
 
 ✨ Project Goals
@@ -49,8 +49,8 @@ This project is developed using Eclipse CDT.
 
 Clone the Repository:
 
-git clone https://github.com/your-username/GameBoyEmulator.git
-cd GameBoyEmulator
+git clone https://github.com/hawkest/Game_Boy_Compyla.git
+cd Game_Boy_Compyla
 
 Import into Eclipse:
 
