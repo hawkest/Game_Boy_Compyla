@@ -18,10 +18,10 @@
 // These constants define the bit positions for the CPU's Flag Register (F).
 // The Flag Register is part of the AF pair.
 // ----------------------------------------------------------------------
-#define CPU_FLAG_ZERO_Z_BIT		(1 << 7)	// 0x80 (Set when an operation results in zero)
-#define CPU_FLAG_SUB_N_BIT		(1 << 6)	// 0x40 (Set if the last instruction was a subtraction)
-#define CPU_FLAG_HALF_H_BIT		(1 << 5)	// 0x20 (Set if there was a carry/borrow in the lower nibble)
-#define CPU_FLAG_CARRY_C_BIT	(1 << 4)	// 0x10 (Set if there was a carry/borrow in the high byte)
+#define CPU_FLAG_ZERO_Z_BIT		(7)	// 0x80 (Set when an operation results in zero)
+#define CPU_FLAG_SUB_N_BIT		(6)	// 0x40 (Set if the last instruction was a subtraction)
+#define CPU_FLAG_HALF_H_BIT		(5)	// 0x20 (Set if there was a carry/borrow in the lower nibble)
+#define CPU_FLAG_CARRY_C_BIT	(4)	// 0x10 (Set if there was a carry/borrow in the high byte)
 
 
 // ----------------------------------------------------------------------
