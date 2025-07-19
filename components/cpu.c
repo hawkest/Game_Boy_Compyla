@@ -945,18 +945,16 @@ static void cpu_execute(uint8_t opcode)
 
 		case 0x07: //Rotate Left Circular Accumulator
 		{
-			//rotates the accumulator register left by one bit.
-
-			//The original value of bit 7 of the accumulator is copied to the carry flag.
-
 
 			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
 
 			uint8_t value = cpu_regs.A; // Store original value for Half Carry check
 
 			// H Flag (Half Carry): Not affected
 
-			if (CHK_BIT(cpu_regs.A, 7))
+			if (CHK_BIT(value, 7))
 			{
 				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
 			}
@@ -967,9 +965,47 @@ static void cpu_execute(uint8_t opcode)
 
 			// Perform the actual increment
 
-			cpu_regs.A = value << 1;
+			cpu_regs.A = (cpu_regs.A << 1 | value >> 7);
 
+		}
+		break;
 
+		case 0x0F: //rrca
+		{
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+
+			uint8_t value = cpu_regs.A; // Store original value for Half Carry check
+
+			// H Flag (Half Carry): Not affected
+
+			if (CHK_BIT(value, 0))
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+			// Perform the actual increment
+
+			cpu_regs.A = (cpu_regs.A >> 1 | value << 7);
+
+		}
+		break;
+
+		case 0x17: //rla
+		{
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+
+			uint8_t value = cpu_regs.A; // Store original value for Half Carry check
+
+			cpu_regs.A = cpu_regs.A << 1;
 			if (CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT))
 			{
 				SET_BIT(cpu_regs.A, 0);
@@ -979,30 +1015,105 @@ static void cpu_execute(uint8_t opcode)
 				CLR_BIT(cpu_regs.A, 0);
 			}
 
+			// H Flag (Half Carry): Not affected
 
-			// Z Flag (Zero): Set if the result is 0x00
-			// Check the NEW value of cpu_regs.A after incrementing
-			if (cpu_regs.A == 0x00)
+			if (CHK_BIT(value, 7))
 			{
-				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
 			}
 			else
 			{
-				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
 			}
-
 
 		}
 		break;
 
-		case 0x0F: //rrca
-		{}break;
-		case 0x17: //rla
-		{}break;
 		case 0x1F: //rra
-		{}break;
+		{
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+
+			uint8_t value = cpu_regs.A; // Store original value for Half Carry check
+
+			cpu_regs.A = cpu_regs.A >> 1;
+			if (CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT))
+			{
+				SET_BIT(cpu_regs.A, 7);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.A, 7);
+			}
+
+			// H Flag (Half Carry): Not affected
+
+			if (CHK_BIT(value, 0))
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+		}
+		break;
+
 		case 0x27: //daa
-		{}break;
+		{
+			// Your existing flag clearing and 'value' saving here
+			uint8_t value = cpu_regs.A;
+			uint8_t current_flag_state = cpu_regs.F;
+
+
+			if (CHK_BIT(current_flag_state, CPU_FLAG_SUB_N_BIT))
+			{
+				// This block will contain the logic for subtraction
+				// (We'll come back to this after addition)
+			}
+			else // (N_FLAG is CLEAR, meaning an ADDITION was performed)
+			{
+				// --- Step 1: Check and adjust the LOWER nibble (bits 0-3) ---
+				// Conditions for adjustment:
+				// 1. If the HALF_CARRY_FLAG is SET (from the previous addition)
+				// OR
+				// 2. If the lower nibble of the Accumulator (A & 0x0F) is greater than 0x09
+				if( (CHK_BIT(current_flag_state, CPU_FLAG_HALF_H_BIT) ) || ((value & 0x0F) > 0x09))// (HALF_CARRY_FLAG is SET) OR ( (ACCUMULATOR_A & 0x0F) > 0x09 )
+				{
+					// If either of these conditions is true:
+					// ADD 0x06 to the ACCUMULATOR_A
+					// HINT: This addition might cause a carry into the upper nibble,
+					// which is why we do this first.
+				}
+
+				// --- Step 2: Check and adjust the UPPER nibble (bits 4-7) ---
+				// Conditions for adjustment:
+				// 1. If the original CARRY_FLAG_STATE was SET (from the previous addition)
+				// OR
+				// 2. If the Accumulator (ACCUMULATOR_A) is now greater than 0x99
+				//    (Note: ACCUMULATOR_A here is its value *after* any lower nibble adjustment)
+				if(true) //(original_C_flag_state is SET) OR (ACCUMULATOR_A > 0x99)
+				{
+					// If either of these conditions is true:
+					// ADD 0x60 to the ACCUMULATOR_A
+					// HINT: This adjustment will also set the CARRY_FLAG
+				}
+
+			}
+
+			// --- Step 3: Final Flag Updates (apply AFTER all adjustments to A are done) ---
+			// Z flag: SET if ACCUMULATOR_A is 0x00, otherwise CLEAR
+			// N flag: UNCHANGED by DAA (it retains its state from the previous instruction)
+			// H flag: ALWAYS CLEAR for DAA
+			// C flag: This was handled in Step 2 for addition. For subtraction, it's different.
+			//         The C flag should be set if the final adjustment caused a carry,
+			//         or if the original C flag was set and the conditions for 0x60 adjustment were met.
+
+		}
+		break;
+
 		case 0x2F: //cpl
 		{}break;
 		case 0x37: //scf
@@ -1035,6 +1146,4 @@ static void write_imm16(uint16_t address, uint16_t value)
     // Write the High Byte of SP to target_address + 1
     mmu_write_byte(address + 1, (uint8_t)((value >> 8) & 0x00FF));
 }
-
-
 
