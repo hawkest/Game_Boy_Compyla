@@ -565,7 +565,7 @@ static void cpu_execute(uint8_t opcode)
 		}
 		break;
 
-		case 0x3C: // INC H
+		case 0x3C: // INC A
 		{
 			// N Flag (Subtract): Always reset (0) for INC r8
 			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT); // Use FLAG_N_POS as per our macro discussion
@@ -602,7 +602,413 @@ static void cpu_execute(uint8_t opcode)
 		break;
 
 
+		case 0x05: // DEC B
+		{
+			// N Flag (Subtract): Always reset (0) for INC r8
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT); // Use FLAG_N_POS as per our macro discussion
 
+			uint8_t old_value = cpu_regs.B; // Store original value for Half Carry check
+
+			// H Flag (Half Carry): Set if carry from bit 3 to bit 4
+			// This occurs if the lower nibble (bits 0-3) was 0xF before incrementing.
+			if ((old_value & 0x0F) == 0x00)
+			{ // Check if the lower nibble is 0xF
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+			// Perform the actual increment
+			cpu_regs.B--;
+
+			// Z Flag (Zero): Set if the result is 0x00
+			// Check the NEW value of cpu_regs.B after incrementing
+			if (cpu_regs.B == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			// C Flag (Carry): NOT AFFECTED by INC r8
+		}
+		break;
+
+		case 0x0D: // DEC C
+		{
+			// N Flag (Subtract): Always reset (0) for INC r8
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT); // Use FLAG_N_POS as per our macro discussion
+
+			uint8_t old_value = cpu_regs.C; // Store original value for Half Carry check
+
+			// H Flag (Half Carry): Set if carry from bit 3 to bit 4
+			// This occurs if the lower nibble (bits 0-3) was 0xF before incrementing.
+			if ((old_value & 0x0F) == 0x00)
+			{ // Check if the lower nibble is 0xF
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+			// Perform the actual increment
+			cpu_regs.C--;
+
+			// Z Flag (Zero): Set if the result is 0x00
+			// Check the NEW value of cpu_regs.C after incrementing
+			if (cpu_regs.C == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			// C Flag (Carry): NOT AFFECTED by INC r8
+		}
+		break;
+
+		case 0x15: // DEC D
+		{
+			// N Flag (Subtract): Always reset (0) for INC r8
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT); // Use FLAG_N_POS as per our macro discussion
+
+			uint8_t old_value = cpu_regs.D; // Store original value for Half Carry check
+
+			// H Flag (Half Carry): Set if carry from bit 3 to bit 4
+			// This occurs if the lower nibble (bits 0-3) was 0xF before incrementing.
+			if ((old_value & 0x0F) == 0x00)
+			{ // Check if the lower nibble is 0xF
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+			// Perform the actual increment
+			cpu_regs.D--;
+
+			// Z Flag (Zero): Set if the result is 0x00
+			// Check the NEW value of cpu_regs.D after incrementing
+			if (cpu_regs.D == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			// C Flag (Carry): NOT AFFECTED by INC r8
+		}
+		break;
+
+		case 0x1D: // DEC E
+		{
+			// N Flag (Subtract): Always reset (0) for INC r8
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT); // Use FLAG_N_POS as per our macro discussion
+
+			uint8_t old_value = cpu_regs.E; // Store original value for Half Carry check
+
+			// H Flag (Half Carry): Set if carry from bit 3 to bit 4
+			// This occurs if the lower nibble (bits 0-3) was 0xF before incrementing.
+			if ((old_value & 0x0F) == 0x00)
+			{ // Check if the lower nibble is 0xF
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+			// Perform the actual increment
+			cpu_regs.E--;
+
+			// Z Flag (Zero): Set if the result is 0x00
+			// Check the NEW value of cpu_regs.E after incrementing
+			if (cpu_regs.E == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			// C Flag (Carry): NOT AFFECTED by INC r8
+		}
+		break;
+
+		case 0x25: // DEC H
+		{
+			// N Flag (Subtract): Always reset (0) for INC r8
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT); // Use FLAG_N_POS as per our macro discussion
+
+			uint8_t old_value = cpu_regs.H; // Store original value for Half Carry check
+
+			// H Flag (Half Carry): Set if carry from bit 3 to bit 4
+			// This occurs if the lower nibble (bits 0-3) was 0xF before incrementing.
+			if ((old_value & 0x0F) == 0x00)
+			{ // Check if the lower nibble is 0xF
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+			// Perform the actual increment
+			cpu_regs.H--;
+
+			// Z Flag (Zero): Set if the result is 0x00
+			// Check the NEW value of cpu_regs.H after incrementing
+			if (cpu_regs.H == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			// C Flag (Carry): NOT AFFECTED by INC r8
+		}
+		break;
+
+		case 0x2D: // DEC L
+		{
+			// N Flag (Subtract): Always reset (0) for INC r8
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT); // Use FLAG_N_POS as per our macro discussion
+
+			uint8_t old_value = cpu_regs.L; // Store original value for Half Carry check
+
+			// H Flag (Half Carry): Set if carry from bit 3 to bit 4
+			// This occurs if the lower nibble (bits 0-3) was 0xF before incrementing.
+			if ((old_value & 0x0F) == 0x00)
+			{ // Check if the lower nibble is 0xF
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+			// Perform the actual increment
+			cpu_regs.L--;
+
+			// Z Flag (Zero): Set if the result is 0x00
+			// Check the NEW value of cpu_regs.LH after incrementing
+			if (cpu_regs.L == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			// C Flag (Carry): NOT AFFECTED by INC r8
+		}
+		break;
+
+		case 0x35: // DEC (HL) - Increment byte at memory address (HL)
+		{
+			// N Flag (Subtract): Always reset (0)
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			uint16_t hl_address = cpu_regs.HL; // Get the memory address from HL
+			uint8_t old_value_at_HL = mmu_read_byte(hl_address); // Read the byte from memory
+
+			// H Flag (Half Carry): Set if carry from bit 3 to bit 4
+			if ((old_value_at_HL & 0x0F) == 0x00) {
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			} else {
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+			// Perform the actual increment on the value from memory
+			uint8_t new_value_at_HL = old_value_at_HL - 1; // Or old_value_at_HL++;
+
+			// Z Flag (Zero): Set if the result is 0x00
+			if (new_value_at_HL == 0x00) {
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			} else {
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			// C Flag (Carry): NOT AFFECTED
+
+			// Write the incremented value back to memory
+			mmu_write_byte(hl_address, new_value_at_HL);
+		}
+		break;
+
+		case 0x3D: // DEC A
+		{
+			// N Flag (Subtract): Always reset (0) for INC r8
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT); // Use FLAG_N_POS as per our macro discussion
+
+			uint8_t old_value = cpu_regs.A; // Store original value for Half Carry check
+
+			// H Flag (Half Carry): Set if carry from bit 3 to bit 4
+			// This occurs if the lower nibble (bits 0-3) was 0xF before incrementing.
+			if ((old_value & 0x0F) == 0x00)
+			{ // Check if the lower nibble is 0xF
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+			// Perform the actual increment
+			cpu_regs.A--;
+
+			// Z Flag (Zero): Set if the result is 0x00
+			// Check the NEW value of cpu_regs.A after incrementing
+			if (cpu_regs.A == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			// C Flag (Carry): NOT AFFECTED by INC r8
+		}
+		break;
+
+
+		case 0x06: //ld r8 imm8
+		{
+			cpu_regs.B = mmu_read_byte(cpu_regs.PC);
+			cpu_regs.PC++;
+		}
+		break;
+
+		case 0x0E: //ld r8 imm8
+		{
+			cpu_regs.C = mmu_read_byte(cpu_regs.PC);
+			cpu_regs.PC++;
+		}
+		break;
+
+		case 0x16: //ld r8 imm8
+		{
+			cpu_regs.D = mmu_read_byte(cpu_regs.PC);
+			cpu_regs.PC++;
+		}
+		break;
+
+		case 0x1E: //ld r8 imm8
+		{
+			cpu_regs.E = mmu_read_byte(cpu_regs.PC);
+			cpu_regs.PC++;
+		}
+		break;
+
+		case 0x26: //ld r8 imm8
+		{
+			cpu_regs.H = mmu_read_byte(cpu_regs.PC);
+			cpu_regs.PC++;
+		}
+		break;
+
+		case 0x2E: //ld r8 imm8
+		{
+			cpu_regs.L = mmu_read_byte(cpu_regs.PC);
+			cpu_regs.PC++;
+		}
+		break;
+
+		case 0x36: //ld r8 imm8
+		{
+			mmu_write_byte(cpu_regs.HL, mmu_read_byte(cpu_regs.PC));
+			cpu_regs.PC++;
+		}
+		break;
+
+		case 0x3E: //ld r8 imm8
+		{
+			cpu_regs.A = mmu_read_byte(cpu_regs.PC);
+			cpu_regs.PC++;
+		}
+		break;
+
+		case 0x07: //Rotate Left Circular Accumulator
+		{
+			//rotates the accumulator register left by one bit.
+
+			//The original value of bit 7 of the accumulator is copied to the carry flag.
+
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			uint8_t value = cpu_regs.A; // Store original value for Half Carry check
+
+			// H Flag (Half Carry): Not affected
+
+			if (CHK_BIT(cpu_regs.A, 7))
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+			// Perform the actual increment
+
+			cpu_regs.A = value << 1;
+
+
+			if (CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT))
+			{
+				SET_BIT(cpu_regs.A, 0);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.A, 0);
+			}
+
+
+			// Z Flag (Zero): Set if the result is 0x00
+			// Check the NEW value of cpu_regs.A after incrementing
+			if (cpu_regs.A == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+
+		}
+		break;
+
+		case 0x0F: //rrca
+		{}break;
+		case 0x17: //rla
+		{}break;
+		case 0x1F: //rra
+		{}break;
+		case 0x27: //daa
+		{}break;
+		case 0x2F: //cpl
+		{}break;
+		case 0x37: //scf
+		{}break;
+		case 0x3F: //ccf
+		{}break;
 
 
 
@@ -629,5 +1035,6 @@ static void write_imm16(uint16_t address, uint16_t value)
     // Write the High Byte of SP to target_address + 1
     mmu_write_byte(address + 1, (uint8_t)((value >> 8) & 0x00FF));
 }
+
 
 
