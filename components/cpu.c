@@ -1067,6 +1067,8 @@ static void cpu_execute(uint8_t opcode)
 			uint8_t value = cpu_regs.A;
 			uint8_t current_flag_state = cpu_regs.F;
 
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+
 
 			if (CHK_BIT(current_flag_state, CPU_FLAG_SUB_N_BIT))
 			{
@@ -1084,6 +1086,7 @@ static void cpu_execute(uint8_t opcode)
 				{
 					// If either of these conditions is true:
 					// ADD 0x06 to the ACCUMULATOR_A
+					cpu_regs.A += 0x06;
 					// HINT: This addition might cause a carry into the upper nibble,
 					// which is why we do this first.
 				}
@@ -1094,10 +1097,11 @@ static void cpu_execute(uint8_t opcode)
 				// OR
 				// 2. If the Accumulator (ACCUMULATOR_A) is now greater than 0x99
 				//    (Note: ACCUMULATOR_A here is its value *after* any lower nibble adjustment)
-				if(true) //(original_C_flag_state is SET) OR (ACCUMULATOR_A > 0x99)
+				if((CHK_BIT(current_flag_state, CPU_FLAG_CARRY_C_BIT) ) || ((value > 0x99))) //(original_C_flag_state is SET) OR (ACCUMULATOR_A > 0x99)
 				{
 					// If either of these conditions is true:
 					// ADD 0x60 to the ACCUMULATOR_A
+					cpu_regs.A += 0x60;
 					// HINT: This adjustment will also set the CARRY_FLAG
 				}
 
