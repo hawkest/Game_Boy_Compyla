@@ -1061,65 +1061,89 @@ static void cpu_execute(uint8_t opcode)
 		}
 		break;
 
-		case 0x27: //daa
+		case 0x27: // DAA - Decimal Adjust Accumulator
 		{
-			// Your existing flag clearing and 'value' saving here
-			uint8_t value = cpu_regs.A;
-			uint8_t current_flag_state = cpu_regs.F;
+			// Capture the flags from the instruction executed immediately before DAA.
+			uint8_t flags_from_previous_instruction = cpu_regs.F;
 
+			// The Half-Carry (H) flag is always cleared by DAA.
 			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
 
+			// Branch based on whether the previous operation was subtraction (N=1) or addition (N=0).
+			if (CHK_BIT(flags_from_previous_instruction, CPU_FLAG_SUB_N_BIT))
+			{
+				/**
+				 * Subtraction Logic (N flag was SET):
+				 * Adjusts Accumulator (A) and flags after a binary subtraction to make it BCD.
+				 * Adjustments depend ONLY on the H and C flags from the previous instruction.
+				 */
 
-			if (CHK_BIT(current_flag_state, CPU_FLAG_SUB_N_BIT))
-			{
-				// This block will contain the logic for subtraction
-				// (We'll come back to this after addition)
-			}
-			else // (N_FLAG is CLEAR, meaning an ADDITION was performed)
-			{
-				// --- Step 1: Check and adjust the LOWER nibble (bits 0-3) ---
-				// Conditions for adjustment:
-				// 1. If the HALF_CARRY_FLAG is SET (from the previous addition)
-				// OR
-				// 2. If the lower nibble of the Accumulator (A & 0x0F) is greater than 0x09
-				if( (CHK_BIT(current_flag_state, CPU_FLAG_HALF_H_BIT) ) || ((value & 0x0F) > 0x09))// (HALF_CARRY_FLAG is SET) OR ( (ACCUMULATOR_A & 0x0F) > 0x09 )
+				// Check if Half-Carry (H) flag was set from previous instruction.
+				if( CHK_BIT(flags_from_previous_instruction, CPU_FLAG_HALF_H_BIT))
 				{
-					// If either of these conditions is true:
-					// ADD 0x06 to the ACCUMULATOR_A
+					// Subtract 0x06 from Accumulator if H was set.
+					cpu_regs.A -= 0x06;
+				}
+
+				// Check if Carry (C) flag was set from previous instruction.
+				if(CHK_BIT(flags_from_previous_instruction, CPU_FLAG_CARRY_C_BIT))
+				{
+					// Subtract 0x60 from Accumulator if C was set.
+					cpu_regs.A -= 0x60;
+					// This line needs review for subtraction DAA.
+				}
+			}
+			else // N_FLAG is CLEAR, meaning an ADDITION was performed.
+			{
+				/**
+				 * Addition Logic (N flag was CLEAR):
+				 * Adjusts Accumulator (A) and flags after a binary addition to make it BCD.
+				 */
+
+				// Adjust lower nibble (bits 0-3) if H flag set OR lower nibble > 0x09.
+				if( (CHK_BIT(flags_from_previous_instruction, CPU_FLAG_HALF_H_BIT) ) || ((cpu_regs.A & 0x0F) > 0x09))
+				{
+					// Add 0x06 to the Accumulator.
 					cpu_regs.A += 0x06;
-					// HINT: This addition might cause a carry into the upper nibble,
-					// which is why we do this first.
 				}
 
-				// --- Step 2: Check and adjust the UPPER nibble (bits 4-7) ---
-				// Conditions for adjustment:
-				// 1. If the original CARRY_FLAG_STATE was SET (from the previous addition)
-				// OR
-				// 2. If the Accumulator (ACCUMULATOR_A) is now greater than 0x99
-				//    (Note: ACCUMULATOR_A here is its value *after* any lower nibble adjustment)
-				if((CHK_BIT(current_flag_state, CPU_FLAG_CARRY_C_BIT) ) || ((value > 0x99))) //(original_C_flag_state is SET) OR (ACCUMULATOR_A > 0x99)
+				// Adjust upper nibble (bits 4-7) if C flag set OR Accumulator > 0x99.
+				// (Uses cpu_regs.A's value after potential lower nibble adjustment).
+				if((CHK_BIT(flags_from_previous_instruction, CPU_FLAG_CARRY_C_BIT) ) || (cpu_regs.A > 0x99))
 				{
-					// If either of these conditions is true:
-					// ADD 0x60 to the ACCUMULATOR_A
+					// Add 0x60 to the Accumulator.
 					cpu_regs.A += 0x60;
-					// HINT: This adjustment will also set the CARRY_FLAG
+					// Set the Carry (C) flag.
+					SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
 				}
-
 			}
 
-			// --- Step 3: Final Flag Updates (apply AFTER all adjustments to A are done) ---
-			// Z flag: SET if ACCUMULATOR_A is 0x00, otherwise CLEAR
-			// N flag: UNCHANGED by DAA (it retains its state from the previous instruction)
-			// H flag: ALWAYS CLEAR for DAA
-			// C flag: This was handled in Step 2 for addition. For subtraction, it's different.
-			//         The C flag should be set if the final adjustment caused a carry,
-			//         or if the original C flag was set and the conditions for 0x60 adjustment were met.
+			// --- Final Flag Updates ---
 
+			// Clear Zero (Z) flag.
+			CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+
+			// Set Zero (Z) flag if Accumulator is 0x00.
+			if(cpu_regs.A == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			// N (Subtract) flag is UNCHANGED by DAA.
+			// H (Half Carry) flag is always cleared by DAA.
+			// C (Carry) flag is handled within addition/subtraction logic.
 		}
 		break;
 
 		case 0x2F: //cpl
-		{}break;
+		{
+			uint8_t to_be_notted = cpu_regs.A;
+			cpu_regs.A = ~to_be_notted;
+
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+			SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+		}
+		break;
+
 		case 0x37: //scf
 		{}break;
 		case 0x3F: //ccf
