@@ -83,6 +83,7 @@ typedef struct {
 // and declared here as 'extern' so other components can access it.
 // ----------------------------------------------------------------------
 extern CPU_State cpu_regs;
+
 extern void cpu_init();
 extern void cpu_run();
 

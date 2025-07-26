@@ -109,4 +109,6 @@ void mmu_write_byte(uint16_t address, uint8_t value);
 void mmu_load_rom(const char* filename);
 
 
+
+
 #endif /* COMPONENTS_MMU_H_ */

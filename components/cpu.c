@@ -21,10 +21,15 @@ static void cpu_execute(uint8_t opcode);
 static uint16_t read_imm16();
 static void write_imm16(uint16_t address, uint16_t value);
 
+uint8_t get_register_value(uint8_t reg_code);
+void set_register_value(uint8_t reg_code, uint8_t value);
+
 #define true (1)
 #define false (0)
 
 int running = true;
+int emulator_is_stopped = false;
+int cpu_is_halted = false;
 
 
 void cpu_init()
@@ -1144,17 +1149,218 @@ static void cpu_execute(uint8_t opcode)
 		}
 		break;
 
-		case 0x37: //scf
-		{}break;
-		case 0x3F: //ccf
-		{}break;
+		case 0x37: //Set Carry Flag
+		{
+			//SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+		}
+		break;
 
+		case 0x3F: //ccf
+		{
+			//SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			TOGGLE_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+		}
+		break;
+
+		case 0x18: //jr imm8
+		{
+			cpu_regs.PC++;
+			int8_t imm8 = mmu_read_byte(cpu_regs.PC);
+			cpu_regs.PC++;
+			cpu_regs.PC += imm8;
+		}
+		break;
+
+		case 0x20: //jr nz, imm8
+		{
+			cpu_regs.PC++;
+			int8_t imm8 = mmu_read_byte(cpu_regs.PC);
+			cpu_regs.PC++;
+
+			if (!(CHK_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT)))
+			{
+
+				cpu_regs.PC += imm8;
+			}
+		}
+		break;
+
+		case 0x28: //jr z, imm8
+		{
+			cpu_regs.PC++;
+			int8_t imm8 = mmu_read_byte(cpu_regs.PC);
+			cpu_regs.PC++;
+
+			if (CHK_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT))
+			{
+
+				cpu_regs.PC += imm8;
+			}
+		}
+		break;
+
+		case 0x30: //jr nc, imm8
+		{
+			cpu_regs.PC++;
+			int8_t imm8 = mmu_read_byte(cpu_regs.PC);
+			cpu_regs.PC++;
+
+			if (!(CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT)))
+			{
+
+				cpu_regs.PC += imm8;
+			}
+		}
+		break;
+
+		case 0x38: //jr c, imm8
+		{
+			cpu_regs.PC++;
+			int8_t imm8 = mmu_read_byte(cpu_regs.PC);
+			cpu_regs.PC++;
+
+			if (CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT))
+			{
+
+				cpu_regs.PC += imm8;
+			}
+		}
+		break;
+
+		case 0x10: //STOP
+		{
+			emulator_is_stopped = true;
+			cpu_regs.PC += 2;
+
+		}
+		break;
+
+		case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
+		case 0x48: case 0x49: case 0x4A: case 0x4B: case 0x4C: case 0x4D: case 0x4E: case 0x4F:
+		case 0x50: case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: case 0x57:
+		case 0x58: case 0x59: case 0x5A: case 0x5B: case 0x5C: case 0x5D: case 0x5E: case 0x5F:
+		case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
+		case 0x68: case 0x69: case 0x6A: case 0x6B: case 0x6C: case 0x6D: case 0x6E: case 0x6F:
+		case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x77: case 0x78:
+		case 0x79: case 0x7A: case 0x7B: case 0x7C: case 0x7D: case 0x7E: case 0x7F:
+		{
+			uint8_t destin = (opcode & 0x38) >> 3;
+			uint8_t SSS = opcode & 0x07;
+
+			uint8_t source = get_register_value(SSS);
+
+			set_register_value(destin, source);
+
+		}
+		break;
+
+		case 0x76:
+		{
+			cpu_is_halted = true;//halt
+		}
+		break;
+
+
+		case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
+		{
+			uint8_t source = (opcode & 0x07);
+			uint8_t original_A = cpu_regs.A;
+			uint8_t r8_value = get_register_value(source);
+
+			uint16_t result16 = (uint16_t)(original_A + r8_value);
+
+			if (result16 == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			if (((original_A & 0xF) + (r8_value & 0xF) ) > 0xF)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+
+			if (result16 > 0xFF)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+			cpu_regs.A = (uint8_t)result16;
+
+		}
+		break;
+
+
+
+		case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97:
+		{
+			uint8_t source = (opcode & 0x07);
+			uint8_t original_A = cpu_regs.A;
+			uint8_t r8_value = get_register_value(source);
+
+			uint8_t result = original_A - r8_value;
+
+			if (result == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			if ((original_A & 0xF) < (r8_value & 0xF))
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+
+			if (original_A < r8_value)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+			cpu_regs.A = result;
+
+		}
+		break;
 
 
 		default:
 			// Handle unknown/unimplemented opcodes (e.g., print an error)
 			break;
 	}
+
+
 }
 
 static uint16_t read_imm16()
@@ -1174,4 +1380,71 @@ static void write_imm16(uint16_t address, uint16_t value)
     // Write the High Byte of SP to target_address + 1
     mmu_write_byte(address + 1, (uint8_t)((value >> 8) & 0x00FF));
 }
+
+
+// Assuming cpu_regs and mmu_read_byte are accessible globally or passed appropriately.
+// For simplicity, assuming cpu_regs is a global struct or extern.
+// You might need to adjust based on your actual CPU struct and MMU function.
+
+// Example CPU registers struct (adjust to your actual definition)
+// extern struct CPU_Registers {
+//     uint8_t B, C, D, E, H, L, A;
+//     uint8_t F; // Flags register
+//     uint16_t SP, PC;
+//     // ... other fields
+// } cpu_regs;
+
+// Example MMU read function (adjust to your actual definition)
+// extern uint8_t mmu_read_byte(uint16_t address);
+uint8_t get_register_value(uint8_t reg_code)
+{
+    switch (reg_code)
+    {
+        case 0x0: return cpu_regs.B;
+        case 0x1: return cpu_regs.C;
+        case 0x2: return cpu_regs.D;
+        case 0x3: return cpu_regs.E;
+        case 0x4: return cpu_regs.H;
+        case 0x5: return cpu_regs.L;
+        case 0x6: return mmu_read_byte(cpu_regs.HL); // (HL) refers to memory at HL
+        case 0x7: return cpu_regs.A;
+        default:
+            // This case should ideally not be reached with valid opcodes
+            // You might want to add error logging or assertion here.
+            return 0xFF; // Return a dummy value or indicate an error
+    }
+}
+
+// Assuming cpu_regs and mmu_write_byte are accessible globally or passed appropriately.
+// Example CPU registers struct (adjust to your actual definition)
+// extern struct CPU_Registers {
+//     uint8_t B, C, D, E, H, L, A;
+//     uint8_t F; // Flags register
+//     uint16_t SP, PC;
+//     uint16_t HL; // Assuming HL is a direct member or computed from H/L
+//     // ... other fields
+// } cpu_regs;
+
+// Example MMU write function (adjust to your actual definition)
+// extern void mmu_write_byte(uint16_t address, uint8_t value);
+void set_register_value(uint8_t reg_code, uint8_t value)
+{
+    switch (reg_code)
+    {
+        case 0x0: cpu_regs.B = value; break;
+        case 0x1: cpu_regs.C = value; break;
+        case 0x2: cpu_regs.D = value; break;
+        case 0x3: cpu_regs.E = value; break;
+        case 0x4: cpu_regs.H = value; break;
+        case 0x5: cpu_regs.L = value; break;
+        case 0x6: mmu_write_byte(cpu_regs.HL, value); break; // (HL) refers to memory at HL
+        case 0x7: cpu_regs.A = value; break;
+        default:
+            // This case should ideally not be reached with valid opcodes
+            // You might want to add error logging or assertion here.
+            break;
+    }
+}
+
+
 
