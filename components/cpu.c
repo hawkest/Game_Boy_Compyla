@@ -1399,7 +1399,469 @@ static void cpu_execute(uint8_t opcode)
 		}
 		break;
 
+		case 0x98: case 0x99: case 0x9A: case 0x9B: case 0x9C: case 0x9D: case 0x9E: case 0x9F:
+		{
+			uint8_t source = (opcode & 0x07);
+			uint8_t original_A = cpu_regs.A;
+			uint8_t r8_value = get_register_value(source);
 
+			uint8_t result = original_A - r8_value - CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+
+			if (result == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			if ((original_A & 0xF) < (r8_value & 0xF)+CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT))
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+
+			if (original_A < (r8_value + CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT)))
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+			cpu_regs.A = result;
+
+		}
+		break;
+
+
+		case 0xA0: case 0xA1: case 0xA2: case 0xA3: case 0xA4: case 0xA5: case 0xA6: case 0xA7:
+		{
+			uint8_t source = (opcode & 0x07);
+			uint8_t original_A = cpu_regs.A;
+			uint8_t r8_value = get_register_value(source);
+
+			uint8_t result = (uint16_t)(original_A & r8_value);
+
+			if (result == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+
+			cpu_regs.A = (uint8_t)result;
+
+		}
+		break;
+
+		case 0xA8: case 0xA9: case 0xAA: case 0xAB: case 0xAC: case 0xAD: case 0xAE: case 0xAF:
+		{
+			uint8_t source = (opcode & 0x07);
+			uint8_t original_A = cpu_regs.A;
+			uint8_t r8_value = get_register_value(source);
+
+			uint8_t result = (uint16_t)(original_A ^ r8_value);
+
+			if (result == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+
+			cpu_regs.A = (uint8_t)result;
+
+		}
+		break;
+
+		case 0xB0: case 0xB1: case 0xB2: case 0xB3: case 0xB4: case 0xB5: case 0xB6: case 0xB7:
+		{
+			uint8_t source = (opcode & 0x07);
+			uint8_t original_A = cpu_regs.A;
+			uint8_t r8_value = get_register_value(source);
+
+			uint8_t result = (uint16_t)(original_A | r8_value);
+
+			if (result == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+
+			cpu_regs.A = (uint8_t)result;
+
+		}
+		break;
+
+		case 0xB8: case 0xB9: case 0xBA: case 0xBB: case 0xBC: case 0xBD: case 0xBE: case 0xBF:
+		{
+			uint8_t source = (opcode & 0x07);
+			uint8_t original_A = cpu_regs.A;
+			uint8_t r8_value = get_register_value(source);
+
+			uint8_t result = original_A - r8_value;
+
+			if (result == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			if ((original_A & 0xF) < (r8_value & 0xF))
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+
+			if (original_A < r8_value)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+		}
+		break;
+
+// operations A, imm8
+		case 0xC6:
+		{
+			uint8_t original_A = cpu_regs.A;
+			uint8_t imm8_value = mmu_read_byte(cpu_regs.PC++);
+
+			uint16_t result16 = (uint16_t)(original_A + imm8_value);
+
+			if (result16 == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			if (((original_A & 0xF) + (imm8_value & 0xF) ) > 0xF)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+
+			if (result16 > 0xFF)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+			cpu_regs.A = (uint8_t)result16;
+
+		}
+		break;
+
+		case 0xCE:
+		{
+			uint8_t original_A = cpu_regs.A;
+			uint8_t imm8_value = mmu_read_byte(cpu_regs.PC++);
+
+			uint8_t carry_in = CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+
+			uint16_t result16 = (uint16_t)(original_A + imm8_value + carry_in);
+
+			if (result16 == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			if (((original_A & 0xF) + (imm8_value & 0xF) + carry_in ) > 0xF)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+
+			if (result16 > 0xFF)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+			cpu_regs.A = (uint8_t)result16;
+
+		}
+		break;
+
+
+
+		case 0xD6:
+		{
+			uint8_t original_A = cpu_regs.A;
+			uint8_t imm8_value = mmu_read_byte(cpu_regs.PC++);
+
+			uint8_t result = original_A - imm8_value;
+
+			if (result == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			if ((original_A & 0xF) < (imm8_value & 0xF))
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+
+			if (original_A < imm8_value)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+			cpu_regs.A = result;
+
+		}
+		break;
+
+		case 0xDE:
+		{
+			uint8_t original_A = cpu_regs.A;
+			uint8_t imm8_value = mmu_read_byte(cpu_regs.PC++);
+
+			uint8_t result = original_A - imm8_value - CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+
+			if (result == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			if ((original_A & 0xF) < (imm8_value & 0xF)+CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT))
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+
+			if (original_A < (imm8_value + CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT)))
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+			cpu_regs.A = result;
+
+		}
+		break;
+
+
+		case 0xE6:
+		{
+			uint8_t original_A = cpu_regs.A;
+			uint8_t imm8_value = mmu_read_byte(cpu_regs.PC++);
+
+			uint8_t result = (uint16_t)(original_A & imm8_value);
+
+			if (result == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+
+			cpu_regs.A = (uint8_t)result;
+
+		}
+		break;
+
+		case 0xEE:
+		{
+			uint8_t original_A = cpu_regs.A;
+			uint8_t imm8_value = mmu_read_byte(cpu_regs.PC++);
+
+			uint8_t result = (uint16_t)(original_A ^ imm8_value);
+
+			if (result == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+
+			cpu_regs.A = (uint8_t)result;
+
+		}
+		break;
+
+		case 0xF6:
+		{
+			uint8_t original_A = cpu_regs.A;
+			uint8_t imm8_value = mmu_read_byte(cpu_regs.PC++);
+
+			uint8_t result = (uint16_t)(original_A | imm8_value);
+
+			if (result == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+
+			cpu_regs.A = (uint8_t)result;
+
+		}
+		break;
+
+		case 0xFE:
+		{
+			uint8_t original_A = cpu_regs.A;
+			uint8_t imm8_value = mmu_read_byte(cpu_regs.PC++);
+
+			uint8_t result = original_A - imm8_value;
+
+			if (result == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			if ((original_A & 0xF) < (imm8_value & 0xF))
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+
+			if (original_A < imm8_value)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+		}
+		break;
 
 
 
