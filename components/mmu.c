@@ -296,3 +296,16 @@ void mmu_load_rom(const char* filename)
     // Close the file stream
     fclose(file_ptr);
 }
+
+uint16_t mmu_read_word(uint16_t address)
+{
+	    // Read the low byte from the current address
+	    uint8_t low_byte = mmu_read_byte(address);
+
+	    // Read the high byte from the next address
+	    uint8_t high_byte = mmu_read_byte(address + 1);
+
+	    // Combine them into a 16-bit word (little-endian)
+	    return (high_byte << 8) | low_byte;
+}
+

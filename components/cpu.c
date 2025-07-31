@@ -30,6 +30,7 @@ void set_register_value(uint8_t reg_code, uint8_t value);
 int running = true;
 int emulator_is_stopped = false;
 int cpu_is_halted = false;
+int interrupt_master_enable = false;
 
 
 void cpu_init()
@@ -1221,7 +1222,7 @@ static void cpu_execute(uint8_t opcode)
 		case 0x38: //jr c, imm8
 		{
 			cpu_regs.PC++;
-			int8_t imm8 = mmu_read_byte(cpu_regs.PC);
+			int8_t imm8 = (uint8_t)mmu_read_byte(cpu_regs.PC);
 			cpu_regs.PC++;
 
 			if (CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT))
@@ -1232,6 +1233,7 @@ static void cpu_execute(uint8_t opcode)
 		}
 		break;
 
+
 		case 0x10: //STOP
 		{
 			emulator_is_stopped = true;
@@ -1240,6 +1242,8 @@ static void cpu_execute(uint8_t opcode)
 		}
 		break;
 
+
+		//ld r8, r8
 		case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
 		case 0x48: case 0x49: case 0x4A: case 0x4B: case 0x4C: case 0x4D: case 0x4E: case 0x4F:
 		case 0x50: case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: case 0x57:
@@ -1860,6 +1864,104 @@ static void cpu_execute(uint8_t opcode)
 				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
 			}
 
+		}
+		break;
+
+
+		case 0xC0: // RET COND
+		{
+			// Check the condition: if the Zero flag is NOT set
+			if (CHK_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT) == 0)
+			{
+				// 1. Read a 16-bit address from the stack (at cpu_regs.SP)
+				uint16_t return_address = mmu_read_word(cpu_regs.SP);
+
+				// 2. Increment the stack pointer by 2
+				cpu_regs.SP += 2;
+
+				// 3. Jump to that address
+				cpu_regs.PC = return_address;
+			}
+		}
+		break;
+
+		case 0xC8: // RET COND
+		{
+			// Check the condition: if the Zero flag is set
+			if (CHK_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT) == 1)
+			{
+				// 1. Read a 16-bit address from the stack (at cpu_regs.SP)
+				uint16_t return_address = mmu_read_word(cpu_regs.SP);
+
+				// 2. Increment the stack pointer by 2
+				cpu_regs.SP += 2;
+
+				// 3. Jump to that address
+				cpu_regs.PC = return_address;
+			}
+		}
+		break;
+
+		case 0xD0: // RET COND
+		{
+			// Check the condition: if the Carry flag is NOT set
+			if (CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT) == 0)
+			{
+				// 1. Read a 16-bit address from the stack (at cpu_regs.SP)
+				uint16_t return_address = mmu_read_word(cpu_regs.SP);
+
+				// 2. Increment the stack pointer by 2
+				cpu_regs.SP += 2;
+
+				// 3. Jump to that address
+				cpu_regs.PC = return_address;
+			}
+		}
+		break;
+
+		case 0xD8: // RET COND
+		{
+			// Check the condition: if the Carry flag is set
+			if (CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT) == 1)
+			{
+				// 1. Read a 16-bit address from the stack (at cpu_regs.SP)
+				uint16_t return_address = mmu_read_word(cpu_regs.SP);
+
+				// 2. Increment the stack pointer by 2
+				cpu_regs.SP += 2;
+
+				// 3. Jump to that address
+				cpu_regs.PC = return_address;
+			}
+		}
+		break;
+
+		case 0xC9: // RET
+		{
+			// 1. Read a 16-bit address from the stack (at cpu_regs.SP)
+			uint16_t return_address = mmu_read_word(cpu_regs.SP);
+
+			// 2. Increment the stack pointer by 2
+			cpu_regs.SP += 2;
+
+			// 3. Jump to that address
+			cpu_regs.PC = return_address;
+		}
+		break;
+
+		case 0xD9: // RETi
+		{
+			// 1. Read a 16-bit address from the stack (at cpu_regs.SP)
+			uint16_t return_address = mmu_read_word(cpu_regs.SP);
+
+			// 2. Increment the stack pointer by 2
+			cpu_regs.SP += 2;
+
+			// 3. Jump to that address
+			cpu_regs.PC = return_address;
+
+			// 4. IMPORTANT: Re-enable interrupts here.
+			interrupt_master_enable = true;
 		}
 		break;
 
