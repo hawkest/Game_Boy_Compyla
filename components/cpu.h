@@ -39,14 +39,6 @@ typedef struct {
     // We define the structure members (LSB and MSB) to match the expected
     // layout in memory for correct 16-bit access (e.g., in BC, C is the LSB, B is the MSB).
 
-    // AF Register Pair (A: Accumulator, F: Flags)
-    union {
-        uint16_t AF; // 16-bit access to AF
-        struct {
-            uint8_t F; // Flags register (LSB in little-endian struct)
-            uint8_t A; // Accumulator (MSB in little-endian struct)
-        };
-    };
 
     // BC Register Pair
     union {
@@ -72,6 +64,15 @@ typedef struct {
         struct {
             uint8_t L; // LSB
             uint8_t H; // MSB
+        };
+    };
+
+    // AF Register Pair (A: Accumulator, F: Flags)
+    union {
+        uint16_t AF; // 16-bit access to AF
+        struct {
+            uint8_t F; // Flags register (LSB in little-endian struct)
+            uint8_t A; // Accumulator (MSB in little-endian struct)
         };
     };
 

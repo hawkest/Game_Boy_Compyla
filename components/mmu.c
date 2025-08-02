@@ -309,3 +309,13 @@ uint16_t mmu_read_word(uint16_t address)
 	    return (high_byte << 8) | low_byte;
 }
 
+void mmu_write_word(uint16_t address, uint16_t value)
+{
+	    // Read the low byte from the current address
+		mmu_write_byte(address++, (uint8_t) (value & 0x00FF));
+
+	    // Read the high byte from the next address
+		mmu_write_byte(address, (uint8_t) (value >> 8));
+
+}
+

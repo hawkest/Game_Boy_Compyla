@@ -107,7 +107,9 @@ void mmu_write_byte(uint16_t address, uint8_t value);
 
 // Function to load the ROM file into memory
 void mmu_load_rom(const char* filename);
+
 uint16_t mmu_read_word(uint16_t address);
+void mmu_write_word(uint16_t address, uint16_t value);
 
 
 

@@ -24,13 +24,15 @@ static void write_imm16(uint16_t address, uint16_t value);
 uint8_t get_register_value(uint8_t reg_code);
 void set_register_value(uint8_t reg_code, uint8_t value);
 
+void execute_prefix_instruction (uint8_t prefixed_opcode);
+
 #define true (1)
 #define false (0)
 
-int running = true;
-int emulator_is_stopped = false;
-int cpu_is_halted = false;
-int interrupt_master_enable = false;
+uint8_t running = true;
+uint8_t emulator_is_stopped = false;
+uint8_t cpu_is_halted = false;
+uint8_t interrupt_master_enable = false;
 
 
 void cpu_init()
@@ -1965,6 +1967,260 @@ static void cpu_execute(uint8_t opcode)
 		}
 		break;
 
+		case 0xC2: //jp nz, imm16
+		{
+
+			int16_t imm16 = mmu_read_word(cpu_regs.PC);
+			cpu_regs.PC += 2;
+
+			if (!(CHK_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT)))
+			{
+
+				cpu_regs.PC = imm16;
+			}
+		}
+		break;
+
+		case 0xCA: //jp z, imm16
+		{
+
+			int16_t imm16 = mmu_read_word(cpu_regs.PC);
+			cpu_regs.PC += 2;
+
+			if ((CHK_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT)))
+			{
+
+				cpu_regs.PC = imm16;
+			}
+		}
+		break;
+
+		case 0xD2: //jp NC, imm16
+		{
+
+			int16_t imm16 = mmu_read_word(cpu_regs.PC);
+			cpu_regs.PC += 2;
+
+			if (!(CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT)))
+			{
+
+				cpu_regs.PC = imm16;
+			}
+		}
+		break;
+
+		case 0xDA: //jp C, imm16
+		{
+
+			int16_t imm16 = mmu_read_word(cpu_regs.PC);
+			cpu_regs.PC += 2;
+
+			if ((CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT)))
+			{
+
+				cpu_regs.PC = imm16;
+			}
+		}
+		break;
+
+		case 0xC3: //jp imm16
+		{
+
+			int16_t imm16 = mmu_read_word(cpu_regs.PC);
+			cpu_regs.PC = imm16;
+		}
+		break;
+
+		case 0xE9: //jp hl
+		{
+			cpu_regs.PC = cpu_regs.HL;
+		}
+		break;
+
+		case 0xC4: //call nz, imm16
+		{
+
+			int16_t imm16 = mmu_read_word(cpu_regs.PC);
+			cpu_regs.PC += 2;
+
+			if (!(CHK_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT)))
+			{
+				cpu_regs.SP -= 2;
+
+				mmu_write_word(cpu_regs.SP, cpu_regs.PC);
+
+				cpu_regs.PC = imm16;
+			}
+		}
+		break;
+
+		case 0xCC: //call z, imm16
+		{
+
+			int16_t imm16 = mmu_read_word(cpu_regs.PC);
+			cpu_regs.PC += 2;
+
+			if ((CHK_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT)))
+			{
+				cpu_regs.SP -= 2;
+
+				mmu_write_word(cpu_regs.SP, cpu_regs.PC);
+
+				cpu_regs.PC = imm16;
+			}
+		}
+		break;
+
+		case 0xD4: //call nc, imm16
+		{
+
+			int16_t imm16 = mmu_read_word(cpu_regs.PC);
+			cpu_regs.PC += 2;
+
+			if (!(CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT)))
+			{
+				cpu_regs.SP -= 2;
+
+				mmu_write_word(cpu_regs.SP, cpu_regs.PC);
+
+				cpu_regs.PC = imm16;
+			}
+		}
+		break;
+
+		case 0xDC: //call c, imm16
+		{
+
+			int16_t imm16 = mmu_read_word(cpu_regs.PC);
+			cpu_regs.PC += 2;
+
+			if ((CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT)))
+			{
+				cpu_regs.SP -= 2;
+
+				mmu_write_word(cpu_regs.SP, cpu_regs.PC);
+
+				cpu_regs.PC = imm16;
+			}
+		}
+		break;
+
+		case 0xCD: //call imm16
+		{
+
+			int16_t imm16 = mmu_read_word(cpu_regs.PC);
+			cpu_regs.PC += 2;
+			cpu_regs.SP -= 2;
+
+			mmu_write_word(cpu_regs.SP, cpu_regs.PC);
+
+			cpu_regs.PC = imm16;
+
+		}
+		break;
+
+		 case 0xC7: case 0xCF: case 0xD7: case 0xDF: case 0xE7: case 0xEF: case 0xF7: case 0xFF: // rst 00h
+		{
+			int16_t RST = cpu_regs.PC;
+			cpu_regs.SP -= 2;
+			mmu_write_word(cpu_regs.SP, RST);
+
+			// Calculate the jump address from the opcode.
+			// The opcode is in the instruction_register (or similar variable from your fetch).
+			// We get the middle three bits (ttt) and multiply by 8.
+			uint8_t ttt = (opcode & 0x38) >> 3;
+			uint16_t jump_address = ttt * 8;
+
+			// Jump to the calculated address.
+			cpu_regs.PC = jump_address;
+		}
+		break;
+
+//POP
+
+		 case 0xC1:
+		 {
+			 int16_t r16stk = mmu_read_word(cpu_regs.SP);
+			 cpu_regs.SP += 2;
+
+
+			 cpu_regs.BC = r16stk;
+
+		 }
+		 break;
+
+		 case 0xD1:
+		 {
+			 int16_t r16stk = mmu_read_word(cpu_regs.SP);
+			 cpu_regs.SP += 2;
+
+
+			 cpu_regs.DE = r16stk;
+
+		 }
+		 break;
+
+		 case 0xE1:
+		 {
+			 int16_t r16stk = mmu_read_word(cpu_regs.SP);
+			 cpu_regs.SP += 2;
+
+
+			 cpu_regs.HL = r16stk;
+
+		 }
+		 break;
+
+		 case 0xF1:
+		 {
+			 int16_t r16stk = mmu_read_word(cpu_regs.SP);
+			 cpu_regs.SP += 2;
+
+
+			 cpu_regs.AF = r16stk & 0xFFF0;
+
+		 }
+		 break;
+
+
+//PUSH
+
+		 case 0xC5:
+		 {
+			 cpu_regs.SP -= 2;
+			 mmu_write_word(cpu_regs.SP, cpu_regs.BC);
+		 }
+		 break;
+
+		 case 0xD5:
+		 {
+			 cpu_regs.SP -= 2;
+			 mmu_write_word(cpu_regs.SP, cpu_regs.DE);
+		 }
+		 break;
+
+		 case 0xE5:
+		 {
+			 cpu_regs.SP -= 2;
+			 mmu_write_word(cpu_regs.SP, cpu_regs.HL);
+		 }
+		 break;
+
+		 case 0xF5:
+		 {
+			 cpu_regs.SP -= 2;
+			 mmu_write_word(cpu_regs.SP, cpu_regs.AF);
+
+		 }
+		 break;
+
+		 case 0xCB:
+		 {
+			 uint8_t prefixed_opcode = mmu_read_byte(cpu_regs.PC);
+			 cpu_regs.PC++;
+			 execute_prefix_instruction(prefixed_opcode);
+		 }
+		 break;
 
 
 		default:
@@ -2056,6 +2312,162 @@ void set_register_value(uint8_t reg_code, uint8_t value)
             // You might want to add error logging or assertion here.
             break;
     }
+}
+
+void execute_prefix_instruction (uint8_t prefixed_opcode)
+{
+	switch (prefixed_opcode)
+	{
+		case 0x00: case 0x01: case 0x02: case 0x03: case 0x04: case 0x05: case 0x06: case 0x07:
+		{
+			uint8_t opcode = prefixed_opcode;
+			uint8_t reg_code = opcode & 0x07;
+			uint8_t r8 = get_register_value(reg_code);
+
+			uint8_t bit7 = (r8 >> 7);
+
+			if (bit7)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+			// Perform the rotate: shift left by 1, and set bit 0 to the old bit 7.
+			r8 = (r8 << 1) | bit7;
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+
+			if (r8 == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			set_register_value(reg_code, r8);
+		}
+		break;
+
+		case 0x08: case 0x09: case 0x0A: case 0x0B: case 0x0C: case 0x0D: case 0x0E: case 0x0F:
+		{
+			uint8_t opcode = prefixed_opcode;
+			uint8_t reg_code = opcode & 0x07;
+			uint8_t r8 = get_register_value(reg_code);
+
+			uint8_t bit0 = (r8 & 0x01) << 7;
+
+			if (bit0 == 0x80)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+			// Perform the rotate: shift right by 1, and set bit 7 to the old bit 0.
+			r8 = (r8 >> 1) | bit0;
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+
+			if (r8 == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			set_register_value(reg_code, r8);
+		}
+		break;
+
+		case 0x10: case 0x11: case 0x12: case 0x13: case 0x14: case 0x15: case 0x16: case 0x17:
+		{
+			uint8_t opcode = prefixed_opcode;
+			uint8_t reg_code = opcode & 0x07;
+			uint16_t r16 = get_register_value(reg_code);
+			uint8_t old_carry = CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+
+
+
+			// Perform the rotate: shift left by 1, and set bit 0 to the old bit 7.
+			r16 = (r16 << 1) | old_carry;
+
+			if (r16 > 0x00FF)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+
+			if (r16 == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			set_register_value(reg_code, (uint8_t)(r16 & 0x00FF));
+		}
+		break;
+
+		case 0x18: case 0x19: case 0x1A: case 0x1B: case 0x1C: case 0x1D: case 0x1E: case 0x1F:
+		{
+			uint8_t opcode = prefixed_opcode;
+			uint8_t reg_code = opcode & 0x07;
+			uint8_t r8 = get_register_value(reg_code);
+			uint8_t bit0 = CHK_BIT(r8, 0);
+			uint8_t old_carry = CHK_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT) << 7;
+
+			r8 = (r8 >> 1) | old_carry;
+
+			if (bit0)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+			CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+
+			if (r8 == 0x00)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+			}
+
+			set_register_value(reg_code, r8);
+		}
+		break;
+
+
+
+
+		default:
+		{}break;
+	}
 }
 
 
