@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "mmu.h"
+#include "..\BitOps\bit_macros.h"
 
 // ----------------------------------------------------------------------
 // Global Memory Arrays
@@ -28,6 +29,7 @@ uint8_t not_usable[MMU_NOT_USABLE_SIZE];        // 0xFEA0 - 0xFEFF (Not Usable A
 uint8_t i_o_register[MMU_I_O_REGISTER_SIZE];    // 0xFF00 - 0xFF7F (I/O Registers)
 uint8_t high_ram[MMU_HIGH_RAM_SIZE];            // 0xFF80 - 0xFFFE (High RAM)
 uint8_t interrupt_enable;                       // 0xFFFF (Interrupt Enable Register)
+uint8_t m_interrupt_flags;
 
 
 // ----------------------------------------------------------------------
@@ -46,6 +48,11 @@ uint8_t mmu_read_byte(uint16_t address)
 	if (address == MMU_ADDRESS_INTERRUPT_ENABLE_REGISTER)
 	{
 		return_value = interrupt_enable;
+	}
+
+	else if (address == MMU_ADDRESS_INTERRUPT_FLAG_REGISTER)
+	{
+		return_value = m_interrupt_flags | 0b11100000;
 	}
 	// Check if the address is within the ROM region (0x0000 - 0x7FFF)
 	else if (address <= MMU_ADDRESS_ROM_BANK_END)
@@ -160,6 +167,16 @@ void mmu_write_byte(uint16_t address, uint8_t value)
 	{
 		interrupt_enable = value;
 	}
+
+    // Handle Interrupt Flag Register (0xFF0F)
+    else if (address == MMU_ADDRESS_INTERRUPT_FLAG_REGISTER)
+    {
+        // Writes to the Interrupt Flag register (0xFF0F)
+        // directly set the flags that can be triggered by the CPU.
+        // Bits 5-7 are always read as 1 and are not writable.
+        m_interrupt_flags = value;
+    }
+
 //	// ROM (0x0000 - 0x7FFF)
 //	// Writes to this region are typically ignored by the MMU (handled by MBCs if present).
 //	else if (address <= MMU_ADDRESS_ROM_BANK_END)

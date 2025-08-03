@@ -14,6 +14,7 @@
 #define COMPONENTS_MMU_H_
 
 #include <stdint.h>
+#include "..\BitOps\bit_macros.h"
 
 // ----------------------------------------------------------------------
 // MMU Address and Size Constants
@@ -79,8 +80,21 @@
 #define MMU_ADDRESS_HIGH_RAM_END 			(0xFFFE)
 #define MMU_HIGH_RAM_SIZE					(MMU_ADDRESS_HIGH_RAM_END - MMU_ADDRESS_HIGH_RAM_START + 1)
 
+//Interrupt Flag
+#define MMU_ADDRESS_INTERRUPT_FLAG_REGISTER			(0XFF0F)
+#define MMU_INTERRUPT_FLAG_JOYPAD			BIT(4)
+#define MMU_INTERRUPT_FLAG_SERIAL			BIT(3)
+#define MMU_INTERRUPT_FLAG_TIMER			BIT(2)
+#define MMU_INTERRUPT_FLAG_LCD				BIT(1)
+#define MMU_INTERRUPT_FLAG_VBLANK			BIT(0)
+
 // Interrupt Enable Register (IE) (0xFFFF)
 #define MMU_ADDRESS_INTERRUPT_ENABLE_REGISTER		(0xFFFF)
+#define MMU_INTERRUPT_ENABLE_JOYPAD			BIT(4)
+#define MMU_INTERRUPT_ENABLE_SERIAL			BIT(3)
+#define MMU_INTERRUPT_ENABLE_TIMER			BIT(2)
+#define MMU_INTERRUPT_ENABLE_LCD			BIT(1)
+#define MMU_INTERRUPT_ENABLE_VBLANK			BIT(0)
 
 // ----------------------------------------------------------------------
 // External Memory Array Declarations

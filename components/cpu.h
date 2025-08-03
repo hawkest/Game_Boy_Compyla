@@ -12,6 +12,7 @@
 #define COMPONENTS_CPU_H_
 
 #include <stdint.h>
+#include "..\BitOps\bit_macros.h"
 
 // ----------------------------------------------------------------------
 // CPU Flag Definitions
@@ -78,12 +79,14 @@ typedef struct {
 
 } CPU_State;
 
+
 // ----------------------------------------------------------------------
 // Global CPU State Declaration
 // The actual instance of the CPU state (cpu_regs) is defined in cpu.c
 // and declared here as 'extern' so other components can access it.
 // ----------------------------------------------------------------------
 extern CPU_State cpu_regs;
+
 
 extern void cpu_init();
 extern void cpu_run();

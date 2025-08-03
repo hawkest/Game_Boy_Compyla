@@ -5,7 +5,8 @@
  *      Author: hawke
  */
 
-
+#include <stdlib.h>
+#include <stdio.h>
 #include "cpu.h"
 #include "mmu.h"
 #include "..\BitOps\bit_macros.h"
@@ -1832,9 +1833,9 @@ static void cpu_execute(uint8_t opcode)
 		case 0xFE:
 		{
 			uint8_t original_A = cpu_regs.A;
-			uint8_t imm8_value = mmu_read_byte(cpu_regs.PC++);
+			uint8_t imm8 = mmu_read_byte(cpu_regs.PC++);
 
-			uint8_t result = original_A - imm8_value;
+			uint8_t result = original_A - imm8;
 
 			if (result == 0x00)
 			{
@@ -1847,7 +1848,7 @@ static void cpu_execute(uint8_t opcode)
 
 			SET_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
 
-			if ((original_A & 0xF) < (imm8_value & 0xF))
+			if ((original_A & 0xF) < (imm8 & 0xF))
 			{
 				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
 			}
@@ -1857,7 +1858,7 @@ static void cpu_execute(uint8_t opcode)
 			}
 
 
-			if (original_A < imm8_value)
+			if (original_A < imm8)
 			{
 				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
 			}
@@ -2213,7 +2214,9 @@ static void cpu_execute(uint8_t opcode)
 
 		 }
 		 break;
+//end PUSH
 
+//$CB prefix special case
 		 case 0xCB:
 		 {
 			 uint8_t prefixed_opcode = mmu_read_byte(cpu_regs.PC);
@@ -2221,11 +2224,149 @@ static void cpu_execute(uint8_t opcode)
 			 execute_prefix_instruction(prefixed_opcode);
 		 }
 		 break;
+//end $CB prefix special case
 
+
+		 case 0xE2:
+		 {
+			 mmu_write_byte(0xFF00 + cpu_regs.C, cpu_regs.A);
+		 }
+		 break;
+
+		 case 0xE0:
+		 {
+			 uint8_t imm8 = mmu_read_byte(cpu_regs.PC++);
+			 mmu_write_byte(0xFF00 + imm8, cpu_regs.A);
+		 }
+		 break;
+
+		 case 0xEA:
+		 {
+			 uint16_t address = mmu_read_byte(cpu_regs.PC++);
+			 address |= (mmu_read_byte(cpu_regs.PC++) << 8);
+			 mmu_write_byte(address, cpu_regs.A);
+		 }
+		 break;
+
+		 case 0xF2:
+		 {
+			 cpu_regs.A = mmu_read_byte(0xFF00 + cpu_regs.C);
+		 }
+		 break;
+
+		 case 0xF0:
+		 {
+			 uint8_t imm8 = mmu_read_byte(cpu_regs.PC++);
+			 cpu_regs.A = mmu_read_byte(0xFF00 + imm8);
+		 }
+		 break;
+
+		 case 0xFA:
+		 {
+			 uint16_t imm16 = mmu_read_byte(cpu_regs.PC++);
+			 imm16 |= (mmu_read_byte(cpu_regs.PC++) << 8);
+			 cpu_regs.A = mmu_read_byte(imm16);
+		 }
+		 break;
+
+		 case 0xE8:
+		 {
+			int8_t imm8 = (int8_t)mmu_read_byte(cpu_regs.PC++);
+			uint16_t original_SP = cpu_regs.SP;
+
+			cpu_regs.SP += imm8;
+
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			if ((original_SP ^ cpu_regs.SP ^ imm8) & 0x1000)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+
+			if ((original_SP ^ cpu_regs.SP ^ imm8) & 0x100)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+		 }
+		 break;
+
+		 case 0xF8:
+		 {
+			uint16_t original_SP = cpu_regs.SP;
+			int8_t imm8 = (int8_t)mmu_read_byte(cpu_regs.PC++);
+			cpu_regs.HL = cpu_regs.SP + imm8;
+
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_ZERO_Z_BIT);
+
+			CLR_BIT(cpu_regs.F, CPU_FLAG_SUB_N_BIT);
+
+			if ((original_SP ^ cpu_regs.HL ^ imm8) & 0x1000)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_HALF_H_BIT);
+			}
+
+
+			if ((original_SP ^ cpu_regs.HL ^ imm8) & 0x100)
+			{
+				SET_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+			else
+			{
+				CLR_BIT(cpu_regs.F, CPU_FLAG_CARRY_C_BIT);
+			}
+
+		 }
+		 break;
+
+		 case 0xF9:
+		 {
+			 cpu_regs.SP = cpu_regs.HL;
+		 }
+		 break;
+
+		 case 0xF3:
+		 {
+			 interrupt_master_enable = false;
+		 }
+		 break;
+
+		 case 0xFB:
+		 {
+			 interrupt_master_enable = true;
+		 }
+		 break;
+
+		 //'m to find my way to where i'm working
 
 		default:
-			// Handle unknown/unimplemented opcodes (e.g., print an error)
-			break;
+		{    // A default case for opcodes is critical for debugging.
+		    // If we hit this, it means the program is trying to execute an
+		    // instruction that is either unimplemented or invalid.
+		    printf("Error: Unhandled opcode 0x%02X at address 0x%04X\n", opcode, cpu_regs.PC);
+		    // You should then halt the program's execution to prevent
+		    // running invalid code and corrupting the emulator's state.
+		    exit(1);
+		}
+		break;
 	}
 
 
@@ -2674,10 +2815,6 @@ void execute_prefix_instruction (uint8_t prefixed_opcode)
 
 		}
 		break;
-
-
-
-
 
 		default:
 		{}break;
