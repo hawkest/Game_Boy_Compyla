@@ -53,7 +53,7 @@ void cpu_run()
 	while(running)
 	{
 		cpu_step();
-		check_and_handle_interrupts();
+
 	}
 }
 
@@ -64,57 +64,66 @@ static void cpu_step()
 	cpu_regs.PC = cpu_regs.PC + 1;
 
 	cpu_execute(opcode);
+	check_and_handle_interrupts();
 }
 
 static void check_and_handle_interrupts()
 {
-	if (interrupt_master_enable)
-	{
-		uint8_t active_interrupts = mmu_read_byte(MMU_ADDRESS_INTERRUPT_FLAG_REGISTER)
-				& mmu_read_byte(MMU_ADDRESS_INTERRUPT_ENABLE_REGISTER);
-		if (active_interrupts > 0x00)
-		{
+	uint8_t IF_byte = mmu_read_byte(MMU_ADDRESS_INTERRUPT_FLAG_REGISTER);
+	uint8_t IE_byte = mmu_read_byte(MMU_ADDRESS_INTERRUPT_ENABLE_REGISTER);
+	uint8_t active_interrupts = IF_byte & IE_byte;
 
+	if (IF_byte > 0x00)
+	{
+		if(cpu_is_halted)
+		{
+			cpu_is_halted = false;
+		}
+
+		if (interrupt_master_enable && (active_interrupts > 0x00))
+		{
 			interrupt_master_enable = false;
-			mmu_write_word(cpu_regs.SP--, mmu_read_word(cpu_regs.PC));
+			cpu_regs.SP -= 2;
+			mmu_write_word(cpu_regs.SP, cpu_regs.PC);
 
 			if(CHK_BIT(active_interrupts, MMU_INTERRUPT_FLAG_VBLANK))
 			{
-				CLR_BIT(active_interrupts, MMU_INTERRUPT_FLAG_VBLANK);
+				CLR_BIT(IF_byte, MMU_INTERRUPT_FLAG_VBLANK);
 				cpu_regs.PC = 0x0040;
-				mmu_write_byte(MMU_ADDRESS_INTERRUPT_FLAG_REGISTER, active_interrupts);
+				mmu_write_byte(MMU_ADDRESS_INTERRUPT_FLAG_REGISTER, IF_byte);
 			}
 			else if
 			(CHK_BIT(active_interrupts, MMU_INTERRUPT_FLAG_LCD))
 			{
-				CLR_BIT(active_interrupts, MMU_INTERRUPT_FLAG_LCD);
+				CLR_BIT(IF_byte, MMU_INTERRUPT_FLAG_LCD);
 				cpu_regs.PC = 0x0048;
-				mmu_write_byte(MMU_ADDRESS_INTERRUPT_FLAG_REGISTER, active_interrupts);
+				mmu_write_byte(MMU_ADDRESS_INTERRUPT_FLAG_REGISTER, IF_byte);
 			}
 			else if
 			(CHK_BIT(active_interrupts, MMU_INTERRUPT_FLAG_TIMER))
 			{
-				CLR_BIT(active_interrupts, MMU_INTERRUPT_FLAG_TIMER);
+				CLR_BIT(IF_byte, MMU_INTERRUPT_FLAG_TIMER);
 				cpu_regs.PC = 0x0050;
-				mmu_write_byte(MMU_ADDRESS_INTERRUPT_FLAG_REGISTER, active_interrupts);
+				mmu_write_byte(MMU_ADDRESS_INTERRUPT_FLAG_REGISTER, IF_byte);
 			}
 			else if
 			(CHK_BIT(active_interrupts, MMU_INTERRUPT_FLAG_SERIAL))
 			{
-				CLR_BIT(active_interrupts, MMU_INTERRUPT_FLAG_SERIAL);
+				CLR_BIT(IF_byte, MMU_INTERRUPT_FLAG_SERIAL);
 				cpu_regs.PC = 0x0058;
-				mmu_write_byte(MMU_ADDRESS_INTERRUPT_FLAG_REGISTER, active_interrupts);
+				mmu_write_byte(MMU_ADDRESS_INTERRUPT_FLAG_REGISTER, IF_byte);
 			}
 			else if
 			(CHK_BIT(active_interrupts, MMU_INTERRUPT_FLAG_JOYPAD))
 			{
-				CLR_BIT(active_interrupts, MMU_INTERRUPT_FLAG_JOYPAD);
+				CLR_BIT(IF_byte, MMU_INTERRUPT_FLAG_JOYPAD);
 				cpu_regs.PC = 0x0060;
-				mmu_write_byte(MMU_ADDRESS_INTERRUPT_FLAG_REGISTER, active_interrupts);
+				mmu_write_byte(MMU_ADDRESS_INTERRUPT_FLAG_REGISTER, IF_byte);
 			}
 		}
 	}
 }
+
 
 static void cpu_execute(uint8_t opcode)
 {
