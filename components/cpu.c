@@ -5,7 +5,17 @@
  *      Author: hawke
  */
 
+#ifndef BOOL_DEFINED
+#define BOOL_DEFINED
+
+typedef char bool;
+#define true 1
+#define false 0
+
+#endif // BOOL_DEFINED
+
 #include <stdlib.h>
+//#include <stdbool.h>
 #include <stdio.h>
 #include "cpu.h"
 #include "mmu.h"
@@ -29,13 +39,11 @@ void set_register_value(uint8_t reg_code, uint8_t value);
 
 void execute_prefix_instruction (uint8_t prefixed_opcode);
 
-#define true (1)
-#define false (0)
 
-uint8_t running = true;
-uint8_t emulator_is_stopped = false;
-uint8_t cpu_is_halted = false;
-uint8_t interrupt_master_enable = false;
+bool running = true;
+bool emulator_is_stopped = false;
+bool cpu_is_halted = false;
+bool interrupt_master_enable = false;
 
 
 void cpu_init()

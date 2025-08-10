@@ -96,6 +96,21 @@
 #define MMU_INTERRUPT_ENABLE_LCD			BIT(1)
 #define MMU_INTERRUPT_ENABLE_VBLANK			BIT(0)
 
+// PPU Registers
+#define PPU_REGISTER_LCDC_ADDRESS			(0xFF40) // R/W
+#define PPU_REGISTER_STAT_ADDRESS			(0xFF41) // R/W
+#define PPU_REGISTER_SCY_ADDRESS			(0xFF42) // R/W
+#define PPU_REGISTER_SCX_ADDRESS			(0xFF43) // R/W
+#define PPU_REGISTER_LY_ADDRESS				(0xFF44) // R
+#define PPU_REGISTER_LYC_ADDRESS			(0xFF45) // R/W
+#define PPU_REGISTER_DMA_ADDRESS			(0xFF46) // W
+#define PPU_REGISTER_BGP_ADDRESS			(0xFF47) // R/W
+#define PPU_REGISTER_OBP0_ADDRESS			(0xFF48) // R/W
+#define PPU_REGISTER_OBP1_ADDRESS			(0xFF49) // R/W
+#define PPU_REGISTER_WY_ADDRESS				(0xFF4A) // R/W
+#define PPU_REGISTER_WX_ADDRESS				(0xFF4B) // R/W
+
+
 // ----------------------------------------------------------------------
 // External Memory Array Declarations
 // These arrays are defined in mmu.c and declared here as extern
