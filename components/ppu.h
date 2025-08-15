@@ -40,6 +40,15 @@ typedef enum
     PPU_MODE_DRAWING = 3    // Mode 3
 } ppu_mode_t;
 
+typedef struct
+{
+	ppu_mode_t current_mode; // What mode the PPU is currently in (H-Blank, V-Blank, etc.)
+	uint32_t cycles_on_scanline; // Counter for CPU cycles spent on the current scanline
+	uint32_t current_scanline_value;
+	uint32_t screen_buffer[160 * 144];
 
+} ppu_state_t;
+
+extern ppu_state;
 
 #endif /* COMPONENTS_PPU_H_ */

@@ -8,9 +8,11 @@
  * Author: hawke
  */
 
+
 #include <stdint.h>
 #include <stdio.h>
 #include "mmu.h"
+#include "ppu.h"
 #include "..\BitOps\bit_macros.h"
 
 // ----------------------------------------------------------------------
@@ -140,6 +142,27 @@ uint8_t mmu_read_byte(uint16_t address)
 	// Check for I/O Registers (0xFF00 - 0xFF7F)
 	else if(address <= MMU_ADDRESS_I_O_REGISTER_END)
 	{
+		if (address < PPU_REGISTER_LCDC_ADDRESS )
+		{
+
+		}
+		else if(address <= PPU_REGISTER_WX_ADDRESS)
+		{
+			if(address == PPU_REGISTER_LY_ADDRESS)
+			{
+				return ppu_state.current_scanline_value;
+			}
+			else
+			{
+
+			}
+		}
+		else
+		{
+			offset = address - MMU_ADDRESS_I_O_REGISTER_START;
+			return_value = i_o_register[offset];
+		}
+
 		offset = address - MMU_ADDRESS_I_O_REGISTER_START;
 		return_value = i_o_register[offset];
 	}

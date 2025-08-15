@@ -5,6 +5,8 @@
  *      Author: hawke
  */
 
+#include "components\ppu.h"
 
+static ppu_state_t ppu_state;
 
 

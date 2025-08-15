@@ -5,17 +5,9 @@
  *      Author: hawke
  */
 
-#ifndef BOOL_DEFINED
-#define BOOL_DEFINED
-
-typedef char bool;
-#define true 1
-#define false 0
-
-#endif // BOOL_DEFINED
 
 #include <stdlib.h>
-//#include <stdbool.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include "cpu.h"
 #include "mmu.h"
