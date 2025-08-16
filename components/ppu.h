@@ -49,6 +49,6 @@ typedef struct
 
 } ppu_state_t;
 
-extern ppu_state;
+extern ppu_state_t ppu_state;
 
 #endif /* COMPONENTS_PPU_H_ */

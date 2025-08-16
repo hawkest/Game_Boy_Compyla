@@ -144,17 +144,22 @@ uint8_t mmu_read_byte(uint16_t address)
 	{
 		if (address < PPU_REGISTER_LCDC_ADDRESS )
 		{
-
+			offset = address - MMU_ADDRESS_I_O_REGISTER_START;
+			return_value = i_o_register[offset];
 		}
 		else if(address <= PPU_REGISTER_WX_ADDRESS)
 		{
 			if(address == PPU_REGISTER_LY_ADDRESS)
 			{
-				return ppu_state.current_scanline_value;
+	            // LY is read-only by the CPU, its value is controlled by the PPU itself.
+	            // Return the current scanline value from the PPU's internal state.
+				return_value = ppu_state.current_scanline_value;
 			}
 			else
 			{
-
+				// For other PPU registers (LCDC, STAT, SCX, SCY, etc.),
+				// simply return the value stored in your I/O register array.
+				return_value = i_o_register[address - 0xFF00];
 			}
 		}
 		else
@@ -163,8 +168,6 @@ uint8_t mmu_read_byte(uint16_t address)
 			return_value = i_o_register[offset];
 		}
 
-		offset = address - MMU_ADDRESS_I_O_REGISTER_START;
-		return_value = i_o_register[offset];
 	}
 	// Check for High RAM (HRAM) (0xFF80 - 0xFFFE)
 	else if(address <= MMU_ADDRESS_HIGH_RAM_END)
@@ -279,8 +282,51 @@ void mmu_write_byte(uint16_t address, uint8_t value)
 	// I/O Registers (0xFF00 - 0xFF7F)
 	else if(address <= MMU_ADDRESS_I_O_REGISTER_END)
 	{
-		offset = address - MMU_ADDRESS_I_O_REGISTER_START;
-		i_o_register[offset] = value;
+
+		if (address < PPU_REGISTER_LCDC_ADDRESS )
+		{
+			offset = address - MMU_ADDRESS_I_O_REGISTER_START;
+			i_o_register[offset] = value;
+		}
+		else if(address <= PPU_REGISTER_WX_ADDRESS)
+		{
+			if(address == PPU_REGISTER_STAT_ADDRESS)
+			{
+				offset = address - MMU_ADDRESS_I_O_REGISTER_START;
+				uint8_t preserved_bits =  i_o_register[offset] & PPU_REGISTER_STAT_READ_ONLY_MASK;
+				uint8_t new_writable_bites = value & PPU_REGISTER_STAT_WRITABLE_MASK;
+				i_o_register[offset] = preserved_bits | new_writable_bites;
+			}
+			else if(address == PPU_REGISTER_LY_ADDRESS)
+			{
+	            // LY is read-only by the CPU. Writes to it are generally ignored.
+	            // Do nothing here for LY writes.
+	            // Optional: Log a warning for unexpected writes if debugging.
+				printf("READ-ONLY location! Unexpected write attempt to write to PPU_REGISTER_LY_ADDRESS");
+			}
+			else if (address == PPU_REGISTER_DMA_ADDRESS)
+			{
+				 // DMA is write-only and triggers a special transfer.
+				 // You'll implement the DMA transfer logic here or call a PPU function for it.
+				 // For now, you might just store the value and mark that a DMA is pending.
+				 i_o_register[address - 0xFF00] = value; // Still store it if you want to read it back, though not common
+				 // CALL ppu_initiate_dma_transfer(value) // Placeholder for future DMA logic
+			}
+			else
+			{
+	            // For other PPU registers (LCDC, STAT, SCX, SCY, BGP, etc.),
+	            // simply store the value in your I/O register array.
+	            i_o_register[address - 0xFF00] = value;
+	            // Optional: If writing to LCDC/STAT affects PPU state immediately,
+	            // you might call a PPU update function here.
+			}
+		}
+		else
+		{
+			offset = address - MMU_ADDRESS_I_O_REGISTER_START;
+			i_o_register[offset] = value;
+		}
+
 	}
 	// High RAM (HRAM) (0xFF80 - 0xFFFE)
 	else if(address <= MMU_ADDRESS_HIGH_RAM_END)

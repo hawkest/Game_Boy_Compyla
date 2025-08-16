@@ -110,6 +110,21 @@
 #define PPU_REGISTER_WY_ADDRESS				(0xFF4A) // R/W
 #define PPU_REGISTER_WX_ADDRESS				(0xFF4B) // R/W
 
+// PPU Register Masks
+//#define PPU_REGISTER_LCDC_ADDRESS			(0xFF40) // R/W
+#define PPU_REGISTER_STAT_READ_ONLY_MASK	(0x87) 	// read only
+#define PPU_REGISTER_STAT_WRITABLE_MASK		(0x78) 	// writable
+//#define PPU_REGISTER_SCY_ADDRESS			(0xFF42) // R/W
+//#define PPU_REGISTER_SCX_ADDRESS			(0xFF43) // R/W
+//#define PPU_REGISTER_LY_ADDRESS				(0xFF44) // R
+//#define PPU_REGISTER_LYC_ADDRESS			(0xFF45) // R/W
+//#define PPU_REGISTER_DMA_ADDRESS			(0xFF46) // W
+//#define PPU_REGISTER_BGP_ADDRESS			(0xFF47) // R/W
+//#define PPU_REGISTER_OBP0_ADDRESS			(0xFF48) // R/W
+//#define PPU_REGISTER_OBP1_ADDRESS			(0xFF49) // R/W
+//#define PPU_REGISTER_WY_ADDRESS				(0xFF4A) // R/W
+//#define PPU_REGISTER_WX_ADDRESS				(0xFF4B) // R/W
+
 
 // ----------------------------------------------------------------------
 // External Memory Array Declarations
