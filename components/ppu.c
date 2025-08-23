@@ -6,6 +6,7 @@
  */
 
 #include "ppu.h"
+#include "..\headers\mystdbool.h"
 
 ppu_state_t ppu_state;
 

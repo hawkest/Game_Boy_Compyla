@@ -10,8 +10,10 @@
 
 
 #include <stdint.h>
-#include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include "..\headers\mystdbool.h"
+
 #include "mmu.h"
 #include "ppu.h"
 #include "..\BitOps\bit_macros.h"
@@ -34,7 +36,7 @@ uint8_t high_ram[MMU_HIGH_RAM_SIZE];            // 0xFF80 - 0xFFFE (High RAM)
 uint8_t interrupt_enable;                       // 0xFFFF (Interrupt Enable Register)
 uint8_t m_interrupt_flags;
 
-bool pending_DMA = false;
+myBool pending_DMA = false;
 
 // ----------------------------------------------------------------------
 // mmu_read_byte

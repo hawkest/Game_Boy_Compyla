@@ -7,7 +7,7 @@
 
 
 #include <stdlib.h>
-#include <stdbool.h>
+#include "..\headers\mystdbool.h"
 #include <stdio.h>
 #include "cpu.h"
 #include "mmu.h"
@@ -32,10 +32,10 @@ void set_register_value(uint8_t reg_code, uint8_t value);
 void execute_prefix_instruction (uint8_t prefixed_opcode);
 
 
-bool running = true;
-bool emulator_is_stopped = false;
-bool cpu_is_halted = false;
-bool interrupt_master_enable = false;
+myBool running = true;
+myBool emulator_is_stopped = false;
+myBool cpu_is_halted = false;
+myBool interrupt_master_enable = false;
 
 
 void cpu_init()
