@@ -14,8 +14,8 @@
 // Define 'bool' as a character type
 typedef char myBool;
 // Define 'true' as 1 and 'false' as 0
-#define true 1
-#define false 0
+#define myTrue 1
+#define myFalse 0
 
 #endif // CUSTOM_BOOL_DEFINED
 

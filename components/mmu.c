@@ -36,7 +36,7 @@ uint8_t high_ram[MMU_HIGH_RAM_SIZE];            // 0xFF80 - 0xFFFE (High RAM)
 uint8_t interrupt_enable;                       // 0xFFFF (Interrupt Enable Register)
 uint8_t m_interrupt_flags;
 
-myBool pending_DMA = false;
+myBool pending_DMA = myFalse;
 
 // ----------------------------------------------------------------------
 // mmu_read_byte
@@ -314,7 +314,7 @@ void mmu_write_byte(uint16_t address, uint8_t value)
 				 // You'll implement the DMA transfer logic here or call a PPU function for it.
 				 // For now, you might just store the value and mark that a DMA is pending.
 				 i_o_register[address - 0xFF00] = value; // Still store it if you want to read it back, though not common
-				 pending_DMA = true;
+				 pending_DMA = myTrue;
 				 // CALL ppu_initiate_dma_transfer(value) // Placeholder for future DMA logic
 			}
 			else

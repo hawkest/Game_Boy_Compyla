@@ -32,10 +32,10 @@ void set_register_value(uint8_t reg_code, uint8_t value);
 void execute_prefix_instruction (uint8_t prefixed_opcode);
 
 
-myBool running = true;
-myBool emulator_is_stopped = false;
-myBool cpu_is_halted = false;
-myBool interrupt_master_enable = false;
+myBool running = myTrue;
+myBool emulator_is_stopped = myFalse;
+myBool cpu_is_halted = myFalse;
+myBool interrupt_master_enable = myFalse;
 
 
 void cpu_init()
@@ -77,12 +77,12 @@ static void check_and_handle_interrupts()
 	{
 		if(cpu_is_halted)
 		{
-			cpu_is_halted = false;
+			cpu_is_halted = myFalse;
 		}
 
 		if (interrupt_master_enable && (active_interrupts > 0x00))
 		{
-			interrupt_master_enable = false;
+			interrupt_master_enable = myFalse;
 			cpu_regs.SP -= 2;
 			mmu_write_word(cpu_regs.SP, cpu_regs.PC);
 
@@ -1301,7 +1301,7 @@ static void cpu_execute(uint8_t opcode)
 
 		case 0x10: //STOP
 		{
-			emulator_is_stopped = true;
+			emulator_is_stopped = myTrue;
 			cpu_regs.PC += 2;
 
 		}
@@ -1330,7 +1330,7 @@ static void cpu_execute(uint8_t opcode)
 
 		case 0x76:
 		{
-			cpu_is_halted = true;//halt
+			cpu_is_halted = myTrue;//halt
 		}
 		break;
 
@@ -2026,7 +2026,7 @@ static void cpu_execute(uint8_t opcode)
 			cpu_regs.PC = return_address;
 
 			// 4. IMPORTANT: Re-enable interrupts here.
-			interrupt_master_enable = true;
+			interrupt_master_enable = myTrue;
 		}
 		break;
 
@@ -2407,13 +2407,13 @@ static void cpu_execute(uint8_t opcode)
 
 		 case 0xF3:
 		 {
-			 interrupt_master_enable = false;
+			 interrupt_master_enable = myFalse;
 		 }
 		 break;
 
 		 case 0xFB:
 		 {
-			 interrupt_master_enable = true;
+			 interrupt_master_enable = myTrue;
 		 }
 		 break;
 
