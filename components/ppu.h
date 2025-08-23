@@ -9,6 +9,7 @@
 #define COMPONENTS_PPU_H_
 
 #include <stdint.h>
+#include "..\headers\mystdbool.h"
 #include "..\BitOps\bit_macros.h"
 
 // Default Power-On Values for PPU Registers
@@ -59,14 +60,28 @@ typedef enum
 
 typedef struct
 {
-	ppu_mode_t current_mode; // What mode the PPU is currently in (H-Blank, V-Blank, etc.)
-	uint32_t cycles_on_scanline; // Counter for CPU cycles spent on the current scanline
-	uint32_t current_scanline_value;
-	uint32_t screen_buffer[160 * 144];
+	ppu_mode_t current_mode; 		// What mode the PPU is currently in (H-Blank, V-Blank, etc.)
+	uint32_t cycles_on_scanline; 	// Counter for CPU cycles spent on the current scanline
+	uint8_t internal_ly_counter; 	// PPU's internal counter for the current scanline (LY register value)
+	uint8_t current_lyc_value;
+	myBool lcd_enabled;
 
+    // Decoded palettes for faster lookups during rendering
+	uint32_t bg_palette[4];			// Decoded colors for background/window
+	uint32_t obj_palette_0[4];		// Decoded colors for sprite palette 0
+	uint32_t obj_palette_1[4];		// Decoded colors for sprite palette 1
+
+    // DMA transfer state
+    myBool dma_active;				// True if an OAM DMA transfer is currently in progress
+    uint16_t dma_cycles_left;		// Cycles remaining for the current DMA transfer
+
+    // Pixel buffers
+	uint32_t screen_buffer[GB_SCREEN_WIDTH * GB_SCREEN_HEIGHT];	// The full screen frame buffer
+    uint32_t scanline_pixels[GB_SCREEN_WIDTH];					// Temporary buffer for the current scanline being rendered
 } ppu_state_t;
 
 extern ppu_state_t ppu_state;
 void ppu_init(void);
+void ppu_step(uint32_t cpu_cycles_executed_this_turn);
 
 #endif /* COMPONENTS_PPU_H_ */

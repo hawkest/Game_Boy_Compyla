@@ -157,7 +157,7 @@ uint8_t mmu_read_byte(uint16_t address)
 			{
 	            // LY is read-only by the CPU, its value is controlled by the PPU itself.
 	            // Return the current scanline value from the PPU's internal state.
-				return_value = ppu_state.current_scanline_value;
+				return_value = ppu_state.internal_ly_counter;
 			}
 			else
 			{
