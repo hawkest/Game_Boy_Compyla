@@ -11,6 +11,23 @@
 #include <stdint.h>
 #include "..\BitOps\bit_macros.h"
 
+// Default Power-On Values for PPU Registers
+#define PPU_DEFAULT_LCDC_VALUE  (0x91)
+#define PPU_DEFAULT_STAT_VALUE  (0x02)
+#define PPU_DEFAULT_SCY_VALUE   (0x00)
+#define PPU_DEFAULT_SCX_VALUE   (0x00)
+#define PPU_DEFAULT_LY_VALUE    (0x00)
+#define PPU_DEFAULT_LYC_VALUE   (0x00)
+#define PPU_DEFAULT_BGP_VALUE   (0xFC)
+#define PPU_DEFAULT_OBP0_VALUE  (0xFF)
+#define PPU_DEFAULT_OBP1_VALUE  (0xFF)
+#define PPU_DEFAULT_WY_VALUE    (0x00)
+#define PPU_DEFAULT_WX_VALUE    (0x00)
+
+// And the pixel dimensions for your screen_buffer
+#define GB_SCREEN_WIDTH   (160)
+#define GB_SCREEN_HEIGHT  (144)
+
 
 // LCDC 0XFF40 BYTE MAP
 #define PPU_LCDC_LCD_PPU_ENABLE 			BIT(7)
@@ -50,5 +67,6 @@ typedef struct
 } ppu_state_t;
 
 extern ppu_state_t ppu_state;
+void ppu_init(void);
 
 #endif /* COMPONENTS_PPU_H_ */
