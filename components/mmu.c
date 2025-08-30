@@ -286,51 +286,53 @@ void mmu_write_byte(uint16_t address, uint8_t value)
 	// I/O Registers (0xFF00 - 0xFF7F)
 	else if(address <= MMU_ADDRESS_I_O_REGISTER_END)
 	{
+		uint8_t offset = address - MMU_ADDRESS_I_O_REGISTER_START;
 
-		if (address < PPU_REGISTER_LCDC_ADDRESS )
+		// Handle the special-case registers first.
+		// These either have unique write behavior or side effects that prevent
+		// the standard value assignment at the end of the block.
+		if (address == PPU_REGISTER_STAT_ADDRESS)
 		{
-			offset = address - MMU_ADDRESS_I_O_REGISTER_START;
+			uint8_t preserved_bits = i_o_register[offset] & PPU_REGISTER_STAT_READ_ONLY_MASK;
+			uint8_t new_writable_bites = value & PPU_REGISTER_STAT_WRITABLE_MASK;
+			i_o_register[offset] = preserved_bits | new_writable_bites;
+			return; // Exit after special handling, as the final write is not needed
+		}
+		else if (address == PPU_REGISTER_LY_ADDRESS)
+		{
+			// LY is read-only by the CPU, so writes are ignored.
+			printf("READ-ONLY location! Unexpected write attempt to PPU_REGISTER_LY_ADDRESS");
+			return; // Exit as nothing should be written to memory
+		}
+		else if (address == PPU_REGISTER_DMA_ADDRESS)
+		{
+			// DMA write triggers a transfer, it doesn't just store a value.
+			// You would call a DMA function here.
+			// The value is often stored, but the key action is the transfer itself.
 			i_o_register[offset] = value;
+			pending_DMA = myTrue;
+			// CALL ppu_initiate_dma_transfer(value) // Placeholder for future DMA logic
+			return; // Exit after the DMA action
 		}
-		else if(address <= PPU_REGISTER_WX_ADDRESS)
+
+		// Handle registers with a side effect (palette decoding).
+		// The value still needs to be written to memory, so we don't return here.
+		if (address == PPU_REGISTER_BGP_ADDRESS)
 		{
-			if(address == PPU_REGISTER_STAT_ADDRESS)
-			{
-				offset = address - MMU_ADDRESS_I_O_REGISTER_START;
-				uint8_t preserved_bits =  i_o_register[offset] & PPU_REGISTER_STAT_READ_ONLY_MASK;
-				uint8_t new_writable_bites = value & PPU_REGISTER_STAT_WRITABLE_MASK;
-				i_o_register[offset] = preserved_bits | new_writable_bites;
-			}
-			else if(address == PPU_REGISTER_LY_ADDRESS)
-			{
-	            // LY is read-only by the CPU. Writes to it are generally ignored.
-	            // Do nothing here for LY writes.
-	            // Optional: Log a warning for unexpected writes if debugging.
-				printf("READ-ONLY location! Unexpected write attempt to write to PPU_REGISTER_LY_ADDRESS");
-			}
-			else if (address == PPU_REGISTER_DMA_ADDRESS)
-			{
-				 // DMA is write-only and triggers a special transfer.
-				 // You'll implement the DMA transfer logic here or call a PPU function for it.
-				 // For now, you might just store the value and mark that a DMA is pending.
-				 i_o_register[address - 0xFF00] = value; // Still store it if you want to read it back, though not common
-				 pending_DMA = myTrue;
-				 // CALL ppu_initiate_dma_transfer(value) // Placeholder for future DMA logic
-			}
-			else
-			{
-	            // For other PPU registers (LCDC, STAT, SCX, SCY, BGP, etc.),
-	            // simply store the value in your I/O register array.
-	            i_o_register[address - 0xFF00] = value;
-	            // Optional: If writing to LCDC/STAT affects PPU state immediately,
-	            // you might call a PPU update function here.
-			}
+			ppu_decode_palette(value, ppu_state.bg_palette);
 		}
-		else
+		else if (address == PPU_REGISTER_OBP0_ADDRESS)
 		{
-			offset = address - MMU_ADDRESS_I_O_REGISTER_START;
-			i_o_register[offset] = value;
+			ppu_decode_palette(value, ppu_state.obj_palette_0);
 		}
+		else if (address == PPU_REGISTER_OBP1_ADDRESS)
+		{
+			ppu_decode_palette(value, ppu_state.obj_palette_1);
+		}
+
+		// For all other I/O registers in this block, simply store the value.
+		// This includes the palette registers and all other PPU registers (LCDC, SCX, SCY, etc.).
+		i_o_register[offset] = value;
 
 	}
 	// High RAM (HRAM) (0xFF80 - 0xFFFE)

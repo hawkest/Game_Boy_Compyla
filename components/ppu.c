@@ -15,6 +15,9 @@
 
 ppu_state_t ppu_state;
 
+void ppu_decode_palette(uint8_t palette_data_register_value, uint32_t *target_palette_array);
+
+
 void ppu_init(void)
 {
 	ppu_state.current_mode = PPU_MODE_OAM_SCAN;
@@ -46,6 +49,11 @@ void ppu_init(void)
 	mmu_write_byte(PPU_REGISTER_OBP1_ADDRESS,PPU_DEFAULT_OBP1_VALUE);
 	mmu_write_byte(PPU_REGISTER_WY_ADDRESS,PPU_DEFAULT_WY_VALUE);
 	mmu_write_byte(PPU_REGISTER_WX_ADDRESS,PPU_DEFAULT_WX_VALUE);
+
+	ppu_decode_palette(mmu_read_byte(PPU_REGISTER_BGP_ADDRESS), ppu_state.bg_palette);
+	ppu_decode_palette(mmu_read_byte(PPU_REGISTER_OBP0_ADDRESS), ppu_state.obj_palette_0);
+	ppu_decode_palette(mmu_read_byte(PPU_REGISTER_OBP1_ADDRESS), ppu_state.obj_palette_1);
+
 }
 
 void ppu_step(uint32_t cpu_cycles_executed_this_turn)
@@ -142,3 +150,27 @@ void ppu_step(uint32_t cpu_cycles_executed_this_turn)
 	}
 }
 
+void ppu_decode_palette(uint8_t palette_data_register_value, uint32_t *target_palette_array)
+{
+
+    // A loop to process each of the four 2-bit color IDs in the byte.
+    for (int i = 0; i <= 3; i++)
+    {
+        // Use a bitwise shift to move the correct 2-bit ID to the beginning (right side) of the byte.
+        // For the first color (i=0), we shift 0 bits.
+        // For the second color (i=1), we shift 2 bits.
+        // For the third color (i=2), we shift 4 bits.
+        // For the fourth color (i=3), we shift 6 bits.
+        uint8_t shifted_byte = palette_data_register_value >> (i * 2);
+
+        // Use a bitwise mask to isolate just the two bits at the end.
+        // 0x03 in hexadecimal is 00000011 in binary.
+        // This will give you a number from 0 to 3.
+        uint8_t color_id = shifted_byte & 0x03;
+
+        // Use the color_id to get the final color from your predefined palette.
+        // Write the final color to your target array in the correct position.
+        target_palette_array[i] = MODERN_PURPLE_PALETTE[color_id];
+
+    }
+}
