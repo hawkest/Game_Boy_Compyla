@@ -60,47 +60,6 @@ typedef enum
     PPU_MODE_DRAWING = 3    // Mode 3
 } ppu_mode_t;
 
-// Note: Colours are defined in 0xRRGGBBAA format (Red, Green, Blue, Alpha).
-// You can adjust the alpha (A) value if your rendering library requires it.
-// Here, we use FF for full opacity.
-
-// --- 1. Classic Green palette (Original Game Boy) ---
-// This palette maps to the original green-on-dark-green screen.
-const uint32_t CLASSIC_GREEN_PALETTE[4] = {
-    0xFF9BBC0F, // White (Lightest shade)
-    0xFF8BAC0F, // Light Grey
-    0xFF306230, // Dark Grey
-    0xFF0F380F  // Black (Darkest shade)
-};
-
-// --- 2. Classic Grayscale Palette ---
-// A clean and simple black and white palette.
-const uint32_t CLASSIC_GRAYSCALE_PALETTE[4] = {
-    0xFFFFFFFF, // White (Lightest shade)
-    0xFFC0C0C0, // Light Grey
-    0xFF606060, // Dark Grey
-    0xFF000000  // Black (Darkest shade)
-};
-
-// --- 3. Modern Vibrant Palette ---
-// A more colorful and high-contrast palette.
-const uint32_t MODERN_VIBRANT_PALETTE[4] = {
-    0xFFF6F89B, // Lightest shade
-    0xFF87C042, // Light shade
-    0xFF2D6930, // Dark shade
-    0xFF000000  // Darkest shade
-};
-
-// --- 4. Modern Purple Palette ---
-// A clean, high-contrast purple palette.
-const uint32_t MODERN_PURPLE_PALETTE[4] = {
-    0xFFE0B0FF, // Lightest purple
-    0xFF800080, // Medium purple
-    0xFF48325C, // Dark purple
-    0xFF200020  // Deepest purple
-};
-
-
 typedef struct
 {
 	ppu_mode_t current_mode; 		// What mode the PPU is currently in (H-Blank, V-Blank, etc.)
@@ -123,8 +82,16 @@ typedef struct
     uint32_t scanline_pixels[GB_SCREEN_WIDTH];					// Temporary buffer for the current scanline being rendered
 } ppu_state_t;
 
+
+// DECLARE the palettes here using extern
+extern const uint32_t CLASSIC_GREEN_PALETTE[4];
+extern const uint32_t CLASSIC_GRAYSCALE_PALETTE[4];
+extern const uint32_t MODERN_VIBRANT_PALETTE[4];
+extern const uint32_t MODERN_PURPLE_PALETTE[4];
+
 extern ppu_state_t ppu_state;
 void ppu_init(void);
 void ppu_step(uint32_t cpu_cycles_executed_this_turn);
+void ppu_decode_palette(uint8_t palette_data_register_value, uint32_t *target_palette_array);
 
 #endif /* COMPONENTS_PPU_H_ */
