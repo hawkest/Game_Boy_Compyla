@@ -263,63 +263,79 @@ void ppu_render_scanline(void)
 
 void render_background_layer_for(uint8_t current_scanline_y)
 {
-//FUNCTION render_background_layer_for(current_scanline_y):
-//    // Get the current scroll positions from the MMU
-//    scroll_x = mmu_read_byte(PPU_REGISTER_SCX_ADDRESS)
-//    scroll_y = mmu_read_byte(PPU_REGISTER_SCY_ADDRESS)
-//
-//    // Calculate the 'y' position on the 256x256 pixel background map
-//    // The modulo operation ensures we wrap around the map if scrolling goes past the edge.
-//    background_map_y = (current_scanline_y + scroll_y) MODULO 256
-//
-//    // Get the base address of the background map data from LCDC register
-//    lcdc_register = mmu_read_byte(PPU_REGISTER_LCDC_ADDRESS)
-//    IF (lcdc_register BITWISE AND PPU_LCDC_BG_TILE_MAP_DISPLAY_SELECT_FLAG):
-//        background_map_address = 0x9C00
-//    ELSE:
-//        background_map_address = 0x9800
-//    END IF
-//
-//    // Get the base address of the tile pattern data
-//    IF (lcdc_register BITWISE AND PPU_LCDC_BG_WINDOW_TILE_SELECT_FLAG):
-//        tile_data_address = 0x8000
-//    ELSE:
-//        tile_data_address = 0x8800
-//    END IF
-//
-//    // Loop through each pixel on the current scanline (0 to 159)
-//    FOR pixel_x FROM 0 TO 159:
-//        // Calculate the 'x' position on the background map
-//        background_map_x = (pixel_x + scroll_x) MODULO 256
-//
-//        // Determine which 8x8 tile we need to look at
-//        // Divide by 8 to convert pixel coords to tile coords
-//        tile_x = background_map_x / 8
-//        tile_y = background_map_y / 8
-//
-//        // Find the index of the tile in the background map
-//        // The background map is 32 tiles wide.
-//        tile_index = mmu_read_byte(background_map_address + (tile_y * 32) + tile_x)
-//
-//        // Find the 2-bit color ID of the specific pixel within that tile
-//        // Remember that each row of an 8x8 tile is represented by 2 bytes of data.
-//        tile_row = background_map_y MODULO 8
-//        tile_column = background_map_x MODULO 8
-//
-//        // Use the tile_index to read the two bytes that define the row of pixels
-//        // The address of the tile's data is calculated using the base tile_data_address + a specific offset
-//        // This offset changes based on the tile_data_address, so you will need to handle that logic
-//        // This is a subtle point that you will need to implement, i have left it vague for you to solve
-//
-//        // Use bitwise logic to get the 2-bit color ID from those two bytes
-//
-//        // Use the bg_palette to translate the 2-bit ID into a 32-bit RGBA color
-//        // The palette was already set up by your `ppu_decode_palette` function.
-//        final_color = ppu_state.bg_palette[color_id]
-//
-//        // Store the final color in the `scanline_pixels` array.
-//        ppu_state.scanline_pixels[pixel_x] = final_color
-//    END FOR
+    // Get the current scroll positions from the MMU
+    uint8_t scroll_x = mmu_read_byte(PPU_REGISTER_SCX_ADDRESS);
+    uint8_t scroll_y = mmu_read_byte(PPU_REGISTER_SCY_ADDRESS);
+
+    // Calculate the 'y' position on the 256x256 pixel background map
+    // The modulo operation ensures we wrap around the map if scrolling goes past the edge.
+    uint8_t background_map_y = (current_scanline_y + scroll_y) % 256;
+
+    // Get the base address of the background map data from LCDC register
+    uint8_t lcdc_register = mmu_read_byte(PPU_REGISTER_LCDC_ADDRESS);
+
+    uint16_t background_map_address, tile_data_address = 0xffff;
+
+    if(lcdc_register & PPU_LCDC_BG_TILE_MAP_DISPLAY_SELECT)
+    {
+    	background_map_address = 0x9C00;
+    }
+    else
+    {
+    	background_map_address = 0x9800;
+    }
+
+    // Get the base address of the tile pattern data
+    if (lcdc_register & PPU_LCDC_BG_WINDOW_TILE_SELECT)
+	{
+    	tile_data_address = 0x8000;
+	}
+    else
+    {
+        tile_data_address = 0x8800;
+    }
+
+    // Loop through each pixel on the current scanline (0 to 159)
+    for (int p_x = 0; p_x <= 159; p_x++)
+    {
+        // Calculate the 'x' position on the background map
+        uint16_t background_map_x = (p_x + scroll_x) % 256;
+
+        // Determine which 8x8 tile we need to look at
+        // Divide by 8 to convert pixel coords to tile coords
+        uint8_t tile_x = background_map_x / 8;
+        uint8_t tile_y = background_map_y / 8;
+
+        // Find the index of the tile in the background map
+        // The background map is 32 tiles wide.
+        uint8_t tile_index = mmu_read_byte(background_map_address + (tile_y * 32) + tile_x);
+
+        // Find the 2-bit color ID of the specific pixel within that tile
+        // Remember that each row of an 8x8 tile is represented by 2 bytes of data.
+        uint16_t tile_row = background_map_y % 8;
+        uint16_t tile_column = background_map_x % 8;
+
+        // Use the tile_index to read the two bytes that define the row of pixels
+        // The address of the tile's data is calculated using the base tile_data_address + a specific offset
+        // This offset changes based on the tile_data_address, so you will need to handle that logic
+        // This is a subtle point that you will need to implement, i have left it vague for you to solve
+        uint16_t tile_start_address = tile_data_address + (tile_index * 16);
+
+        // Use bitwise logic to get the 2-bit color ID from those two bytes
+        uint8_t byte_1, byte_2;
+        byte_1 = mmu_read_byte(tile_start_address + (tile_row * 2));
+        byte_2 = mmu_read_byte(tile_start_address + (tile_row * 2) + 1);
+
+        uint8_t low_bit = (byte_1 >> (7 - tile_column )) & 1
+        uint8_t high_bit = (byte_2 >> (7 - tile column)) & 1;
+
+        // Use the bg_palette to translate the 2-bit ID into a 32-bit RGBA color
+        // The palette was already set up by your `ppu_decode_palette` function.
+        uint32_t final_colour = ppu_state.bg_palette[colour_id];
+
+        // Store the final color in the `scanline_pixels` array.
+        ppu_state.scanline_pixels[p_x] = final_colour;
+    }
 //END FUNCTION
 }
 
